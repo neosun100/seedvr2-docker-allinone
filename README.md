@@ -7,7 +7,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/neosun/seedvr2-allinone?style=for-the-badge&logo=docker)](https://hub.docker.com/r/neosun/seedvr2-allinone)
 [![GitHub Stars](https://img.shields.io/github/stars/neosun100/seedvr2-docker-allinone?style=for-the-badge&logo=github)](https://github.com/neosun100/seedvr2-docker-allinone)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.3.0-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
+[![Version](https://img.shields.io/badge/Version-1.3.1-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
 
 **🚀 One-Click Deploy AI Video/Image Upscaler with Web UI**
 
@@ -41,7 +41,7 @@
 docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:latest
 
 # Lightweight: 7B Sharp FP16 only (~27GB)
-docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:v1.3.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual
+docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:v1.3.1-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual
 ```
 
 Then open:
@@ -55,11 +55,11 @@ Then open:
 
 | Image Tag | Models | Size | Use Case |
 |-----------|--------|------|----------|
-| `latest` / `v1.3.0-12models-*` | All 12 | ~103GB | Full features |
-| `v1.3.0-3b-fast-4models-*` | 4× 3B | ~26GB | Fast processing |
-| `v1.3.0-7b-quality-4models-*` | 4× 7B | ~49GB | High quality |
-| `v1.3.0-7b-sharp-4models-*` | 4× 7B Sharp | ~49GB | Detail enhancement |
-| `v1.3.0-7b-sharp-fp16-only-*` | 1× 7B Sharp FP16 | ~27GB | Minimal size |
+| `latest` / `v1.3.1-12models-*` | All 12 | ~103GB | Full features |
+| `v1.3.1-3b-fast-4models-*` | 4× 3B | ~26GB | Fast processing |
+| `v1.3.1-7b-quality-4models-*` | 4× 7B | ~49GB | High quality |
+| `v1.3.1-7b-sharp-4models-*` | 4× 7B Sharp | ~49GB | Detail enhancement |
+| `v1.3.1-7b-sharp-fp16-only-*` | 1× 7B Sharp FP16 | ~27GB | Minimal size |
 
 ---
 
@@ -207,6 +207,11 @@ python mcp_server.py
 ---
 
 ## 📊 Changelog
+
+### v1.3.1 (2025-12-26)
+- 🐛 Fixed MCP BFloat16 conversion error in upscale_image/upscale_video
+- ✅ All 5 MCP tools fully tested and working
+- ✅ All 9 REST API endpoints verified
 
 ### v1.3.0 (2025-12-26)
 - ✅ VAE Quality presets (Low/Balanced/High)
