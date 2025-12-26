@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SeedVR2 Video Upscaler</title>
+    <style>
+        :root {
+            --bg: #0f0f1a;
+            --card: #1a1a2e;
+            --card-hover: #252542;
+            --accent: #2d2d5a;
+            --highlight: #e94560;
+            --highlight-dim: #c73e54;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --text: #f0f0f0;
+            --text-dim: #8888aa;
+            --border: #3d3d6a;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, var(--bg) 0%, #1a1a2e 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        /* Header */
+        header {
+            text-align: center;
+            padding: 40px 0 30px;
+            margin-bottom: 30px;
+        }
+        h1 { 
+            font-size: 3em; 
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff 0%, var(--highlight) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle { color: var(--text-dim); font-size: 1.1em; }
+        
+        /* Cards */
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .card-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-title .icon { font-size: 1.4em; }
+        
+        /* Current Model Status - Prominent Display */
+        .model-status-bar {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--card) 100%);
+            border-radius: 12px;
+            padding: 20px 25px;
+            margin-bottom: 24px;
+            border: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .model-status-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .model-status-label {
+            color: var(--text-dim);
+            font-size: 0.95em;
+        }
+        .model-status-value {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--success);
+        }
+        .model-status-value.loading {
+            color: var(--warning);
+            animation: pulse 1.5s infinite;
+        }
+        .model-status-value.none {
+            color: var(--text-dim);
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .gpu-stats {
+            display: flex;
+            gap: 25px;
+            font-size: 0.95em;
+        }
+        .gpu-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .gpu-stat-value { font-weight: 600; color: var(--text); }
+        .gpu-stat-label { font-size: 0.8em; color: var(--text-dim); }
+        
+        /* Model Selection Grid */
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .model-card {
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .model-card:hover {
+            border-color: var(--highlight);
+            background: var(--card-hover);
+            transform: translateY(-2px);
+        }
+        .model-card.selected {
+            border-color: var(--highlight);
+            background: rgba(233, 69, 96, 0.15);
+        }
+        .model-card.loaded {
+            border-color: var(--success);
+            background: rgba(46, 204, 113, 0.1);
+        }
+        .model-card.loaded::after {
+            content: '✓ 已加载';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--success);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+        .model-name {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+        .model-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .model-tag {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+        .tag-params { background: #3498db; color: white; }
+        .tag-precision { background: #9b59b6; color: white; }
+        .tag-size { background: #1abc9c; color: white; }
+        .tag-vram { background: #e67e22; color: white; }
+        .tag-recommended { background: var(--highlight); color: white; }
+        .model-desc {
+            font-size: 0.85em;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+        .model-group-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-dim);
+            margin: 20px 0 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed var(--accent);
+        }
+        .model-group-title:first-child { margin-top: 0; }
+        
+        /* Model Actions */
+        .model-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--accent);
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--highlight) 0%, var(--highlight-dim) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+        }
+        .btn-primary:disabled {
+            background: var(--accent);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .btn-secondary {
+            background: var(--accent);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: var(--card-hover); }
+        .btn-danger {
+            background: #c0392b;
+            color: white;
+        }
+        .btn-danger:hover { background: #a93226; }
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9em;
+        }
+        
+        /* Upload Zone */
+        .upload-zone {
+            border: 3px dashed var(--accent);
+            border-radius: 16px;
+            padding: 50px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(0,0,0,0.2);
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--highlight);
+            background: rgba(233, 69, 96, 0.1);
+        }
+        .upload-zone input { display: none; }
+        .upload-icon { font-size: 4em; margin-bottom: 15px; }
+        .upload-hint { font-size: 1.1em; margin-bottom: 8px; }
+        .upload-formats { color: var(--text-dim); font-size: 0.9em; }
+        
+        /* File Info */
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            background: var(--bg);
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .file-icon { font-size: 2em; }
+        .file-details { flex: 1; }
+        .file-name { font-weight: 600; }
+        .file-size { color: var(--text-dim); font-size: 0.9em; }
+        
+        /* Parameters Grid */
+        .params-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
+        .param-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dim);
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        .param-group input, .param-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        .param-group input:focus, .param-group select:focus {
+            outline: none;
+            border-color: var(--highlight);
+        }
+        
+        /* Progress Section */
+        .progress-section {
+            display: none;
+        }
+        .progress-section.active { display: block; }
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .progress-time {
+            font-size: 1.5em;
+            font-weight: 700;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            color: var(--highlight);
+        }
+        .progress-container {
+            background: var(--bg);
+            border-radius: 10px;
+            overflow: hidden;
+            height: 30px;
+            border: 1px solid var(--border);
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--highlight), #ff6b6b);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        .progress-status {
+            margin-top: 15px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        .progress-status.processing { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+        .progress-status.success { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+        .progress-status.error { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+        
+        /* Result Section */
+        .result-section { display: none; }
+        .result-section.active { display: block; }
+        
+        /* Image Comparison Slider */
+        .comparison-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 12px;
+            background: #000;
+            user-select: none;
+        }
+        .comparison-container img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        .comparison-before {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .comparison-before img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: auto;
+            min-width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .comparison-slider {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 4px;
+            height: 100%;
+            background: var(--highlight);
+            cursor: ew-resize;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        .comparison-slider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 44px;
+            height: 44px;
+            background: var(--highlight);
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .comparison-slider::after {
+            content: '◀ ▶';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            white-space: nowrap;
+        }
+        .comparison-label {
+            position: absolute;
+            bottom: 15px;
+            padding: 6px 14px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            font-size: 0.85em;
+            font-weight: 600;
+            border-radius: 20px;
+            z-index: 5;
+        }
+        .comparison-label.before { left: 15px; }
+        .comparison-label.after { right: 15px; }
+        
+        .result-actions {
+            margin-top: 25px;
+            text-align: center;
+        }
+        .result-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--accent);
+        }
+        .result-stat {
+            text-align: center;
+        }
+        .result-stat-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--highlight);
+        }
+        .result-stat-label {
+            font-size: 0.85em;
+            color: var(--text-dim);
+        }
+        
+        /* Language Switch */
+        .lang-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        .lang-switch select {
+            padding: 10px 15px;
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            cursor: pointer;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 2em; }
+            .model-grid { grid-template-columns: 1fr; }
+            .result-grid { grid-template-columns: 1fr; }
+            .model-status-bar { flex-direction: column; text-align: center; }
+            .gpu-stats { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="lang-switch">
+        <select id="langSelect" onchange="switchLang(this.value)">
+            <option value="zh-CN">简体中文</option>
+            <option value="en">English</option>
+            <option value="zh-TW">繁體中文</option>
+            <option value="ja">日本語</option>
+        </select>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>SeedVR2 Video Upscaler</h1>
+            <p class="subtitle" data-i18n="subtitle">AI 驱动的高质量视频与图片超分辨率放大</p>
+        </header>
+
+        <!-- Current Model Status Bar -->
+        <div class="model-status-bar">
+            <div class="model-status-left">
+                <div>
+                    <div class="model-status-label" data-i18n="current_model">当前加载模型</div>
+                    <div class="model-status-value none" id="currentModelName" data-i18n="model_none">未加载</div>
+                </div>
+            </div>
+            <div class="gpu-stats">
+                <div class="gpu-stat">
+                    <span class="gpu-stat-value" id="gpuName">-</span>
+                    <span class="gpu-stat-label">GPU</span>
+                </div>
+                <div class="gpu-stat">
+                    <span class="gpu-stat-value" id="vramUsed">-</span>
+                    <span class="gpu-stat-label" data-i18n="vram_used">显存占用</span>
+                </div>
+                <div class="gpu-stat">
+                    <span class="gpu-stat-value" id="vramTotal">-</span>
+                    <span class="gpu-stat-label" data-i18n="vram_total">显存总量</span>
+                </div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="offloadModel()" data-i18n="btn_unload">卸载模型</button>
+        </div>
+
+        <!-- Queue Status Panel - v1.4.0 -->
+        <div class="queue-status-bar" id="queueStatusBar">
+            <div class="queue-stat">
+                <div class="queue-stat-value processing" id="queueProcessing">-</div>
+                <div class="queue-stat-label" data-i18n="queue_processing">正在处理</div>
+            </div>
+            <div class="queue-stat">
+                <div class="queue-stat-value waiting" id="queueWaiting">0</div>
+                <div class="queue-stat-label" data-i18n="queue_waiting">等待中</div>
+            </div>
+            <div class="queue-stat">
+                <div class="queue-stat-value completed" id="queueCompleted">0</div>
+                <div class="queue-stat-label" data-i18n="queue_completed">已完成</div>
+            </div>
+            <div class="queue-stat">
+                <div class="queue-stat-value" id="queueAvgTime">-</div>
+                <div class="queue-stat-label" data-i18n="queue_avg_time">平均耗时</div>
+            </div>
+        </div>
+
+        <!-- My Task Status (shown when user has active task) -->
+        <div class="my-task-status" id="myTaskStatus">
+            <div class="my-task-header">
+                <span class="my-task-title" data-i18n="my_task">📋 我的任务</span>
+                <span class="my-task-id" id="myTaskId">-</span>
+            </div>
+            <div class="my-task-info">
+                <div class="my-task-item">
+                    <div class="my-task-value" id="myTaskPosition">-</div>
+                    <div class="my-task-label" data-i18n="queue_position">队列位置</div>
+                </div>
+                <div class="my-task-item">
+                    <div class="my-task-value" id="myTaskWait">-</div>
+                    <div class="my-task-label" data-i18n="estimated_wait">预计等待</div>
+                </div>
+                <div class="my-task-item">
+                    <div class="my-task-value" id="myTaskStatus2">-</div>
+                    <div class="my-task-label" data-i18n="task_status">状态</div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Model Selection -->
+        <div class="card">
+            <div class="card-title">
+                <span class="icon">🤖</span>
+                <span data-i18n="model_title">选择 AI 模型</span>
+            </div>
+            <div id="modelContainer"></div>
+            <div class="model-actions">
+                <button class="btn btn-primary" id="loadModelBtn" onclick="loadSelectedModel()" disabled>
+                    <span data-i18n="btn_load">加载模型</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="card">
+            <div class="card-title">
+                <span class="icon">📤</span>
+                <span data-i18n="upload_title">上传文件</span>
+            </div>
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">🎬</div>
+                <p class="upload-hint" data-i18n="upload_hint">点击或拖拽文件到此处</p>
+                <p class="upload-formats" data-i18n="upload_formats">支持格式: MP4, AVI, MOV, MKV, PNG, JPG, WEBP</p>
+                <input type="file" id="fileInput" accept="video/*,image/*">
+            </div>
+            <div class="file-info" id="fileInfo" style="display: none;">
+                <span class="file-icon" id="fileIcon">🖼️</span>
+                <div class="file-details">
+                    <div class="file-name" id="fileName"></div>
+                    <div class="file-size" id="fileSize"></div>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="clearFile()">✕</button>
+            </div>
+        </div>
+
+        <!-- Parameters -->
+        <div class="card">
+            <div class="card-title">
+                <span class="icon">⚙️</span>
+                <span data-i18n="params_title">处理参数</span>
+            </div>
+            <div class="params-grid">
+                <div class="param-group">
+                    <label data-i18n="param_resolution">目标分辨率 (短边)</label>
+                    <select id="resolutionSelect" onchange="onResolutionChange()">
+                        <option value="480">480p (SD)</option>
+                        <option value="540">540p (qHD)</option>
+                        <option value="720">720p (HD)</option>
+                        <option value="1080" selected>1080p (Full HD)</option>
+                        <option value="1440">1440p (2K)</option>
+                        <option value="1620">1620p (2.5K)</option>
+                        <option value="2160">2160p (4K)</option>
+                        <option value="2880">2880p (5K)</option>
+                        <option value="3384">3384p (6K)</option>
+                        <option value="4320">4320p (8K)</option>
+                        <option value="5760">5760p (10K)</option>
+                        <option value="6480">6480p (12K)</option>
+                        <option value="8640">8640p (16K)</option>
+                        <option value="custom" data-i18n="resolution_custom">自定义...</option>
+                    </select>
+                    <input type="number" id="resolutionCustom" value="1080" min="480" max="16000" style="display: none; margin-top: 8px;">
+                </div>
+                <div class="param-group">
+                    <label data-i18n="param_batch">批处理大小</label>
+                    <select id="batchSize">
+                        <option value="1">1 (单帧/图片)</option>
+                        <option value="5" selected>5 (推荐)</option>
+                        <option value="9">9</option>
+                        <option value="13">13</option>
+                        <option value="17">17</option>
+                        <option value="21">21</option>
+                    </select>
+                </div>
+                <div class="param-group">
+                    <label data-i18n="param_color">颜色校正</label>
+                    <select id="colorCorrection">
+                        <option value="lab" selected>LAB (推荐)</option>
+                        <option value="wavelet">Wavelet</option>
+                        <option value="hsv">HSV</option>
+                        <option value="none">无</option>
+                    </select>
+                </div>
+                <div class="param-group">
+                    <label data-i18n="param_seed">随机种子</label>
+                    <input type="number" id="seed" value="42">
+                </div>
+                <div class="param-group">
+                    <label data-i18n="param_vae_tiling">VAE Tiling (高分辨率)</label>
+                    <select id="vaeTiling" onchange="toggleVaeQuality()">
+                        <option value="auto" selected data-i18n="vae_auto">自动 (≥1440p启用)</option>
+                        <option value="on" data-i18n="vae_on">始终启用</option>
+                        <option value="off" data-i18n="vae_off">关闭</option>
+                    </select>
+                </div>
+                <div class="param-group" id="vaeQualityGroup">
+                    <label data-i18n="param_vae_quality">VAE 质量</label>
+                    <select id="vaeQuality">
+                        <option value="low" data-i18n="vae_quality_low">省显存 (512/64)</option>
+                        <option value="medium" data-i18n="vae_quality_medium">平衡 (768/96)</option>
+                        <option value="high" selected data-i18n="vae_quality_high">高质量 (1024/128)</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-top: 25px; text-align: center;">
+                <button class="btn btn-primary" id="processBtn" onclick="startProcess()" disabled>
+                    <span>🚀</span>
+                    <span data-i18n="btn_process">开始处理</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="card progress-section" id="progressSection">
+            <div class="card-title">
+                <span class="icon">📊</span>
+                <span data-i18n="progress_title">处理进度</span>
+            </div>
+            <div class="progress-header">
+                <span id="progressLabel" data-i18n="processing">处理中...</span>
+                <span class="progress-time" id="progressTime">00:00</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%;">0%</div>
+            </div>
+            <div class="progress-status processing" id="progressStatus"></div>
+        </div>
+
+        <!-- Result Section -->
+        <div class="card result-section" id="resultSection">
+            <div class="card-title">
+                <span class="icon">✨</span>
+                <span data-i18n="result_title">处理结果</span>
+            </div>
+            
+            <!-- Image Comparison Slider -->
+            <div class="comparison-container" id="comparisonContainer">
+                <img id="afterImage" src="" alt="After">
+                <div class="comparison-before" id="comparisonBefore">
+                    <img id="beforeImage" src="" alt="Before">
+                </div>
+                <div class="comparison-slider" id="comparisonSlider"></div>
+                <span class="comparison-label before" data-i18n="preview_original">原图</span>
+                <span class="comparison-label after" data-i18n="preview_result">处理后</span>
+            </div>
+            
+            <!-- Video Preview (for videos) -->
+            <div id="videoPreviewContainer" style="display: none; text-align: center;">
+                <video id="resultVideo" controls style="max-width: 100%; max-height: 500px; border-radius: 12px;"></video>
+            </div>
+            
+            <div class="result-stats">
+                <div class="result-stat">
+                    <div class="result-stat-value" id="statTime">-</div>
+                    <div class="result-stat-label" data-i18n="stat_time">处理耗时</div>
+                </div>
+                <div class="result-stat">
+                    <div class="result-stat-value" id="statResolution">-</div>
+                    <div class="result-stat-label" data-i18n="stat_resolution">输出分辨率</div>
+                </div>
+                <div class="result-stat">
+                    <div class="result-stat-value" id="statModel">-</div>
+                    <div class="result-stat-label" data-i18n="stat_model">使用模型</div>
+                </div>
+            </div>
+            <div class="result-actions">
+                <button class="btn btn-primary" id="downloadBtn">
+                    <span>⬇️</span>
+                    <span data-i18n="btn_download">下载结果</span>
+                </button>
+                <button class="btn btn-secondary" onclick="resetUI()" style="margin-left: 15px;">
+                    <span data-i18n="btn_new">处理新文件</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // i18n translations
+        const i18n = {
+            'zh-CN': {
+
+            // Queue translations - v1.4.0
+            queue_processing: '正在处理',
+            queue_waiting: '等待中',
+            queue_completed: '已完成',
+            queue_avg_time: '平均耗时',
+            queue_position: '队列位置',
+            estimated_wait: '预计等待',
+            task_status: '状态',
+            my_task: '📋 我的任务',
+            status_queued_position: '排队中 #{position}',
+
+                subtitle: 'AI 驱动的高质量视频与图片超分辨率放大',
+                current_model: '当前加载模型',
+                preload_status: 'RAM预加载',
+                model_none: '未加载',
+                model_loading: '加载中...',
+                vram_used: '显存占用',
+                vram_total: '显存总量',
+                btn_unload: '卸载模型',
+                model_title: '选择 AI 模型',
+                btn_load: '加载模型',
+                btn_preload: '预加载到内存',
+                upload_title: '上传文件',
+                upload_hint: '点击或拖拽文件到此处',
+                upload_formats: '支持格式: MP4, AVI, MOV, MKV, PNG, JPG, WEBP',
+                params_title: '处理参数',
+                param_resolution: '目标分辨率 (短边)',
+                resolution_custom: '自定义...',
+                param_batch: '批处理大小',
+                param_color: '颜色校正',
+                param_seed: '随机种子',
+                param_vae_tiling: 'VAE Tiling (高分辨率)',
+                vae_auto: '自动 (视频≥2K/图片≥5K)',
+                vae_on: '始终启用',
+                vae_off: '关闭',
+                param_vae_quality: 'VAE 质量',
+                vae_quality_low: '省显存 (512/64)',
+                vae_quality_medium: '平衡 (768/96)',
+                vae_quality_high: '高质量 (1024/128)',
+                btn_process: '开始处理',
+                progress_title: '处理进度',
+                processing: '处理中...',
+                result_title: '处理结果',
+                preview_original: '原始文件',
+                preview_result: '放大结果',
+                stat_time: '处理耗时',
+                stat_resolution: '输出分辨率',
+                stat_model: '使用模型',
+                btn_download: '下载结果',
+                btn_new: '处理新文件',
+                group_3b: '3B 参数模型 (快速)',
+                group_7b: '7B 参数模型 (高质量)',
+                group_7b_sharp: '7B Sharp 模型 (细节增强)',
+                status_queued: '排队等待中...',
+                status_encoding: '编码中...',
+                status_upscaling: '放大处理中...',
+                status_decoding: '解码中...',
+                status_completed: '处理完成！',
+                status_failed: '处理失败',
+                preload_start: '开始预加载模型到内存...',
+                preload_done: '预加载完成！'
+            },
+            'en': {
+
+            // Queue translations - v1.4.0
+            queue_processing: 'Processing',
+            queue_waiting: 'Waiting',
+            queue_completed: 'Completed',
+            queue_avg_time: 'Avg Time',
+            queue_position: 'Position',
+            estimated_wait: 'Est. Wait',
+            task_status: 'Status',
+            my_task: '📋 My Task',
+            status_queued_position: 'Queued #{position}',
+
+                subtitle: 'AI-Powered High-Quality Video & Image Super-Resolution',
+                current_model: 'Current Model',
+                preload_status: 'RAM Preload',
+                model_none: 'Not Loaded',
+                model_loading: 'Loading...',
+                vram_used: 'VRAM Used',
+                vram_total: 'VRAM Total',
+                btn_unload: 'Unload',
+                model_title: 'Select AI Model',
+                btn_load: 'Load Model',
+                btn_preload: 'Preload to RAM',
+                upload_title: 'Upload File',
+                upload_hint: 'Click or drag file here',
+                upload_formats: 'Supported: MP4, AVI, MOV, MKV, PNG, JPG, WEBP',
+                params_title: 'Parameters',
+                param_resolution: 'Target Resolution (short edge)',
+                resolution_custom: 'Custom...',
+                param_batch: 'Batch Size',
+                param_color: 'Color Correction',
+                param_seed: 'Random Seed',
+                param_vae_tiling: 'VAE Tiling (High Res)',
+                vae_auto: 'Auto (Video≥2K/Image≥5K)',
+                vae_on: 'Always On',
+                vae_off: 'Off',
+                param_vae_quality: 'VAE Quality',
+                vae_quality_low: 'Low VRAM (512/64)',
+                vae_quality_medium: 'Balanced (768/96)',
+                vae_quality_high: 'High Quality (1024/128)',
+                btn_process: 'Start Processing',
+                progress_title: 'Progress',
+                processing: 'Processing...',
+                result_title: 'Result',
+                preview_original: 'Original',
+                preview_result: 'Upscaled',
+                stat_time: 'Time',
+                stat_resolution: 'Resolution',
+                stat_model: 'Model',
+                btn_download: 'Download',
+                btn_new: 'New File',
+                group_3b: '3B Models (Fast)',
+                group_7b: '7B Models (High Quality)',
+                group_7b_sharp: '7B Sharp Models (Enhanced Details)',
+                status_queued: 'Queued...',
+                status_encoding: 'Encoding...',
+                status_upscaling: 'Upscaling...',
+                status_decoding: 'Decoding...',
+                status_completed: 'Completed!',
+                status_failed: 'Failed',
+                preload_start: 'Preloading models to RAM...',
+                preload_done: 'Preload complete!'
+            },
+            'zh-TW': {
+
+            // Queue translations - v1.4.0
+            queue_processing: '正在處理',
+            queue_waiting: '等待中',
+            queue_completed: '已完成',
+            queue_avg_time: '平均耗時',
+            queue_position: '佇列位置',
+            estimated_wait: '預計等待',
+            task_status: '狀態',
+            my_task: '📋 我的任務',
+            status_queued_position: '排隊中 #{position}',
+
+                subtitle: 'AI 驅動的高品質視頻與圖片超分辨率放大',
+                current_model: '當前加載模型',
+                preload_status: 'RAM預加載',
+                model_none: '未加載',
+                model_loading: '加載中...',
+                vram_used: '顯存佔用',
+                vram_total: '顯存總量',
+                btn_unload: '卸載模型',
+                model_title: '選擇 AI 模型',
+                btn_load: '加載模型',
+                btn_preload: '預加載到內存',
+                upload_title: '上傳文件',
+                upload_hint: '點擊或拖拽文件到此處',
+                upload_formats: '支持格式: MP4, AVI, MOV, MKV, PNG, JPG, WEBP',
+                params_title: '處理參數',
+                param_resolution: '目標分辨率 (短邊)',
+                resolution_custom: '自定義...',
+                param_batch: '批處理大小',
+                param_color: '顏色校正',
+                param_seed: '隨機種子',
+                btn_process: '開始處理',
+                progress_title: '處理進度',
+                processing: '處理中...',
+                result_title: '處理結果',
+                preview_original: '原始文件',
+                preview_result: '放大結果',
+                stat_time: '處理耗時',
+                stat_resolution: '輸出分辨率',
+                stat_model: '使用模型',
+                btn_download: '下載結果',
+                btn_new: '處理新文件',
+                group_3b: '3B 參數模型 (快速)',
+                group_7b: '7B 參數模型 (高品質)',
+                group_7b_sharp: '7B Sharp 模型 (細節增強)',
+                status_queued: '排隊等待中...',
+                status_completed: '處理完成！',
+                status_failed: '處理失敗'
+            },
+            'ja': {
+
+            // Queue translations - v1.4.0
+            queue_processing: '処理中',
+            queue_waiting: '待機中',
+            queue_completed: '完了',
+            queue_avg_time: '平均時間',
+            queue_position: 'キュー位置',
+            estimated_wait: '推定待機',
+            task_status: 'ステータス',
+            my_task: '📋 マイタスク',
+            status_queued_position: 'キュー #{position}',
+
+                subtitle: 'AI駆動の高品質ビデオ＆画像超解像',
+                current_model: '現在のモデル',
+                preload_status: 'RAMプリロード',
+                model_none: '未ロード',
+                model_loading: 'ロード中...',
+                vram_used: 'VRAM使用量',
+                vram_total: 'VRAM総量',
+                btn_unload: 'アンロード',
+                model_title: 'AIモデル選択',
+                btn_load: 'モデルをロード',
+                btn_preload: 'RAMにプリロード',
+                upload_title: 'ファイルアップロード',
+                upload_hint: 'クリックまたはドラッグ',
+                upload_formats: '対応形式: MP4, AVI, MOV, MKV, PNG, JPG, WEBP',
+                params_title: 'パラメータ',
+                param_resolution: '目標解像度 (短辺)',
+                resolution_custom: 'カスタム...',
+                param_batch: 'バッチサイズ',
+                param_color: '色補正',
+                param_seed: 'シード値',
+                btn_process: '処理開始',
+                progress_title: '進捗',
+                processing: '処理中...',
+                result_title: '結果',
+                preview_original: '元ファイル',
+                preview_result: 'アップスケール結果',
+                stat_time: '処理時間',
+                stat_resolution: '出力解像度',
+                stat_model: 'モデル',
+                btn_download: 'ダウンロード',
+                btn_new: '新規ファイル',
+                group_3b: '3Bモデル (高速)',
+                group_7b: '7Bモデル (高品質)',
+                group_7b_sharp: '7B Sharpモデル (ディテール強化)',
+                status_queued: 'キュー中...',
+                status_completed: '完了！',
+                status_failed: '失敗'
+            }
+        };
+
+        let currentLang = localStorage.getItem('lang') || 'zh-CN';
+        let selectedFile = null;
+        let selectedModel = null;
+        let currentTaskId = null;
+            myCurrentTaskId = null;
+        let processStartTime = null;
+        let timerInterval = null;
+        let modelsData = [];
+
+        // Language switch
+        function switchLang(lang) {
+            currentLang = lang;
+            localStorage.setItem('lang', lang);
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[lang] && i18n[lang][key]) {
+                    el.textContent = i18n[lang][key];
+                }
+            });
+            document.getElementById('langSelect').value = lang;
+            renderModels();
+        }
+
+        // Load models
+        async function loadModels() {
+            try {
+                const res = await fetch('/api/models');
+                const data = await res.json();
+                modelsData = data.models;
+                
+                // Sync loaded model state from server
+                if (data.current) {
+                    window.loadedModel = data.current;
+                    updateCurrentModel(data.current);
+                } else {
+                    window.loadedModel = null;
+                }
+                
+                // Handle loading state
+                if (data.loading && data.loading_model) {
+                    const statusEl = document.getElementById('currentModelName');
+                    statusEl.textContent = (i18n[currentLang]?.model_loading || 'Loading...') + ' ' + data.loading_model.replace('seedvr2_ema_', '').replace('.safetensors', '').replace('.gguf', '');
+                    statusEl.className = 'model-status-value loading';
+                }
+                
+                renderModels();
+            } catch (e) {
+                console.error('Failed to load models:', e);
+            }
+        }
+
+        function renderModels() {
+            const container = document.getElementById('modelContainer');
+            const lang = currentLang;
+            
+            const groups = {
+                '3B': { title: i18n[lang]?.group_3b || '3B Models', models: [] },
+                '7B': { title: i18n[lang]?.group_7b || '7B Models', models: [] },
+                '7B Sharp': { title: i18n[lang]?.group_7b_sharp || '7B Sharp Models', models: [] }
+            };
+            
+            modelsData.forEach(m => {
+                const key = m.variant === 'Sharp' ? '7B Sharp' : m.params;
+                if (groups[key]) groups[key].models.push(m);
+            });
+            
+            let html = '';
+            for (const [key, group] of Object.entries(groups)) {
+                if (group.models.length === 0) continue;
+                html += `<div class="model-group-title">${group.title}</div>`;
+                html += '<div class="model-grid">';
+                group.models.forEach(m => {
+                    const desc = m.desc[lang] || m.desc['en'] || '';
+                    const isRecommended = desc.includes('⭐');
+                    const isLoaded = m.name === window.loadedModel;
+                    const isSelected = m.name === selectedModel;
+                    
+                    html += `
+                        <div class="model-card ${isLoaded ? 'loaded' : ''} ${isSelected ? 'selected' : ''}" 
+                             onclick="selectModel('${m.name}')" data-model="${m.name}">
+                            <div class="model-name">${m.precision} ${m.variant || ''}</div>
+                            <div class="model-tags">
+                                <span class="model-tag tag-params">${m.params}</span>
+                                <span class="model-tag tag-precision">${m.precision}</span>
+                                <span class="model-tag tag-size">${m.size}</span>
+                                <span class="model-tag tag-vram">${m.vram}</span>
+                                ${isRecommended ? '<span class="model-tag tag-recommended">⭐推荐</span>' : ''}
+                            </div>
+                            <div class="model-desc">${desc.replace('⭐推荐', '').replace('⭐Recommended', '').trim()}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            container.innerHTML = html;
+        }
+
+        function selectModel(modelName) {
+            selectedModel = modelName;
+            document.querySelectorAll('.model-card').forEach(card => {
+                card.classList.toggle('selected', card.dataset.model === modelName);
+            });
+            document.getElementById('loadModelBtn').disabled = false;
+            updateProcessButton();
+        }
+
+        async function loadSelectedModel() {
+            if (!selectedModel) return;
+            
+            const btn = document.getElementById('loadModelBtn');
+            const statusEl = document.getElementById('currentModelName');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading">⏳</span> ' + (i18n[currentLang]?.model_loading || 'Loading...');
+            statusEl.textContent = i18n[currentLang]?.model_loading || 'Loading...';
+            statusEl.className = 'model-status-value loading';
+            
+            try {
+                const res = await fetch('/api/models/switch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: selectedModel })
+                });
+                const data = await res.json();
+                
+                if (data.status === 'loaded' || data.status === 'already_loaded') {
+                    window.loadedModel = selectedModel;
+                    updateCurrentModel(selectedModel);
+                    renderModels();
+                } else {
+                    alert(data.error || 'Load failed');
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '<span data-i18n="btn_load">' + (i18n[currentLang]?.btn_load || 'Load Model') + '</span>';
+            updateProcessButton();
+        }
+
+        function updateCurrentModel(modelName) {
+            const el = document.getElementById('currentModelName');
+            if (modelName) {
+                window.loadedModel = modelName;
+                // Show short name
+                const shortName = modelName.replace('seedvr2_ema_', '').replace('.safetensors', '').replace('.gguf', '');
+                el.textContent = shortName;
+                el.className = 'model-status-value';
+            } else {
+                window.loadedModel = null;
+                el.textContent = i18n[currentLang]?.model_none || 'Not Loaded';
+                el.className = 'model-status-value none';
+            }
+        }
+
+        async function offloadModel() {
+            await fetch('/api/gpu/offload', { method: 'POST' });
+            window.loadedModel = null;
+            updateCurrentModel(null);
+            renderModels();
+            updateGPUStatus();
+        }
+
+        async function preloadAllModels() {
+            alert(i18n[currentLang]?.preload_start || 'Preloading models to RAM...');
+            try {
+                await fetch('/api/models/preload', { method: 'POST' });
+                alert(i18n[currentLang]?.preload_done || 'Preload complete!');
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        // GPU Status
+        async function updateGPUStatus() {
+            try {
+                const res = await fetch('/api/gpu/status');
+                const data = await res.json();
+                document.getElementById('gpuName').textContent = data.gpu_name || 'N/A';
+                document.getElementById('vramUsed').textContent = (data.vram_used_mb || 0) + ' MB';
+                document.getElementById('vramTotal').textContent = (data.vram_total_mb || 0) + ' MB';
+                
+                // Sync model state from server
+                if (data.loading) {
+                    const statusEl = document.getElementById('currentModelName');
+                    const loadingModel = data.loading_model || '';
+                    statusEl.textContent = (i18n[currentLang]?.model_loading || 'Loading...') + ' ' + loadingModel.replace('seedvr2_ema_', '').replace('.safetensors', '').replace('.gguf', '');
+                    statusEl.className = 'model-status-value loading';
+                } else if (data.current_model !== window.loadedModel) {
+                    window.loadedModel = data.current_model;
+                    updateCurrentModel(data.current_model);
+                    renderModels();
+                }
+                
+                updateProcessButton();
+            } catch (e) {}
+        }
+
+        // File handling
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadZone.onclick = () => fileInput.click();
+        uploadZone.ondragover = e => { e.preventDefault(); uploadZone.classList.add('dragover'); };
+        uploadZone.ondragleave = () => uploadZone.classList.remove('dragover');
+        uploadZone.ondrop = e => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        };
+        fileInput.onchange = () => { if (fileInput.files.length) handleFile(fileInput.files[0]); };
+
+        function handleFile(file) {
+            selectedFile = file;
+            const isVideo = file.type.startsWith('video/');
+            
+            document.getElementById('fileIcon').textContent = isVideo ? '🎬' : '🖼️';
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatSize(file.size);
+            document.getElementById('fileInfo').style.display = 'flex';
+            
+            // Store original image URL for comparison
+            if (!isVideo) {
+                originalImageUrl = URL.createObjectURL(file);
+            } else {
+                originalImageUrl = null;
+            }
+            
+            updateProcessButton();
+        }
+
+        function clearFile() {
+            if (originalImageUrl) {
+                URL.revokeObjectURL(originalImageUrl);
+                originalImageUrl = null;
+            }
+            selectedFile = null;
+            document.getElementById('fileInfo').style.display = 'none';
+            fileInput.value = '';
+            updateProcessButton();
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+
+        function onResolutionChange() {
+            const select = document.getElementById('resolutionSelect');
+            const custom = document.getElementById('resolutionCustom');
+            if (select.value === 'custom') {
+                custom.style.display = 'block';
+                custom.focus();
+            } else {
+                custom.style.display = 'none';
+                custom.value = select.value;
+            }
+        }
+        
+        function getResolution() {
+            const select = document.getElementById('resolutionSelect');
+            if (select.value === 'custom') {
+                return document.getElementById('resolutionCustom').value;
+            }
+            return select.value;
+        }
+
+        function toggleVaeQuality() {
+            const vaeTiling = document.getElementById('vaeTiling').value;
+            const qualityGroup = document.getElementById('vaeQualityGroup');
+            qualityGroup.style.display = (vaeTiling === 'off') ? 'none' : 'block';
+        }
+
+        function updateProcessButton() {
+            const btn = document.getElementById('processBtn');
+            btn.disabled = !selectedFile || !window.loadedModel;
+        }
+
+        // Processing
+        async function startProcess() {
+            if (!selectedFile || !window.loadedModel) return;
+            
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('resolution', getResolution());
+            formData.append('batch_size', document.getElementById('batchSize').value);
+            formData.append('dit_model', window.loadedModel);
+            formData.append('color_correction', document.getElementById('colorCorrection').value);
+            formData.append('seed', document.getElementById('seed').value);
+            formData.append('vae_tiling', document.getElementById('vaeTiling').value);
+            formData.append('vae_quality', document.getElementById('vaeQuality').value);
+            
+            document.getElementById('processBtn').disabled = true;
+            document.getElementById('progressSection').classList.add('active');
+            document.getElementById('resultSection').classList.remove('active');
+            
+            // Start timer
+            processStartTime = Date.now();
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            try {
+                const res = await fetch('/api/process', { method: 'POST', body: formData });
+                const data = await res.json();
+                currentTaskId = data.task_id;
+                myCurrentTaskId = data.task_id;
+                
+                // Show queue position if queued
+                if (data.queue_position && data.queue_position > 1) {
+                    const posText = (i18n[currentLang]?.status_queued_position || 'Queued #{position}').replace('{position}', data.queue_position);
+                    document.getElementById('progressStatus').textContent = posText + ' - ' + (i18n[currentLang]?.estimated_wait || 'Est.') + ': ' + 
+                        (data.estimated_wait_seconds > 60 ? Math.floor(data.estimated_wait_seconds/60) + 'm' : data.estimated_wait_seconds + 's');
+                }
+                
+                pollStatus();
+                updateMyTaskStatus();
+            } catch (e) {
+                showError(e.message);
+            }
+        }
+
+        function updateTimer() {
+            if (!processStartTime) return;
+            const elapsed = Math.floor((Date.now() - processStartTime) / 1000);
+            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const secs = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('progressTime').textContent = `${mins}:${secs}`;
+        }
+
+        async function pollStatus() {
+            if (!currentTaskId) return;
+            
+            try {
+                const res = await fetch(`/api/status/${currentTaskId}`);
+                const data = await res.json();
+                
+                updateProgress(data.progress || 0);
+                updateStatusText(data.progress);
+                
+                updateMyTaskStatus();
+                if (data.status === 'completed') {
+                    clearInterval(timerInterval);
+                    showResult(data);
+                } else if (data.status === 'failed') {
+                    clearInterval(timerInterval);
+                    showError(data.error);
+                } else {
+                    setTimeout(pollStatus, 1000);
+                }
+            } catch (e) {
+                setTimeout(pollStatus, 2000);
+            }
+        }
+
+        function updateProgress(percent) {
+            const bar = document.getElementById('progressBar');
+            bar.style.width = percent + '%';
+            bar.textContent = percent + '%';
+        }
+
+        function updateStatusText(progress) {
+            const el = document.getElementById('progressStatus');
+            el.className = 'progress-status processing';
+            
+            let status = i18n[currentLang]?.status_queued || 'Queued...';
+            if (progress >= 10) status = i18n[currentLang]?.status_encoding || 'Encoding...';
+            if (progress >= 30) status = i18n[currentLang]?.status_upscaling || 'Upscaling...';
+            if (progress >= 70) status = i18n[currentLang]?.status_decoding || 'Decoding...';
+            
+            el.textContent = status;
+        }
+
+        function showResult(data) {
+            // Use server-side calculated values
+            const processTime = data.process_time || Math.floor((Date.now() - processStartTime) / 1000);
+            const mins = Math.floor(processTime / 60);
+            const secs = processTime % 60;
+            
+            document.getElementById('statTime').textContent = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+            document.getElementById('statResolution').textContent = data.output_resolution || '-';
+            document.getElementById('statModel').textContent = window.loadedModel?.replace('seedvr2_ema_', '').replace('.safetensors', '').replace('.gguf', '') || '-';
+            
+            const isVideo = selectedFile?.type.startsWith('video/');
+            
+            if (isVideo) {
+                // Video: show simple video player
+                document.getElementById('comparisonContainer').style.display = 'none';
+                document.getElementById('videoPreviewContainer').style.display = 'block';
+                document.getElementById('resultVideo').src = `/api/download/${currentTaskId}`;
+            } else {
+                // Image: show comparison slider
+                document.getElementById('comparisonContainer').style.display = 'block';
+                document.getElementById('videoPreviewContainer').style.display = 'none';
+                
+                // Set images
+                document.getElementById('beforeImage').src = originalImageUrl;
+                document.getElementById('afterImage').src = `/api/download/${currentTaskId}`;
+                
+                // Reset slider to center
+                updateComparisonSlider(50);
+            }
+            
+            document.getElementById('downloadBtn').onclick = () => {
+                window.location.href = `/api/download/${currentTaskId}`;
+            };
+            
+            document.getElementById('progressStatus').className = 'progress-status success';
+            document.getElementById('progressStatus').textContent = i18n[currentLang]?.status_completed || 'Completed!';
+            document.getElementById('progressLabel').textContent = i18n[currentLang]?.status_completed || 'Completed!';
+            document.getElementById('resultSection').classList.add('active');
+            document.getElementById('processBtn').disabled = false;
+        }
+
+        // Comparison Slider Logic
+        let originalImageUrl = null;
+        
+        function updateComparisonSlider(percent) {
+            const slider = document.getElementById('comparisonSlider');
+            const before = document.getElementById('comparisonBefore');
+            slider.style.left = percent + '%';
+            before.style.width = percent + '%';
+        }
+        
+        function initComparisonSlider() {
+            const container = document.getElementById('comparisonContainer');
+            const slider = document.getElementById('comparisonSlider');
+            let isDragging = false;
+            
+            function getPercent(e) {
+                const rect = container.getBoundingClientRect();
+                const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+                return Math.max(0, Math.min(100, (x / rect.width) * 100));
+            }
+            
+            function startDrag(e) {
+                isDragging = true;
+                e.preventDefault();
+            }
+            
+            function doDrag(e) {
+                if (!isDragging) return;
+                updateComparisonSlider(getPercent(e));
+            }
+            
+            function endDrag() {
+                isDragging = false;
+            }
+            
+            // Mouse events
+            slider.addEventListener('mousedown', startDrag);
+            document.addEventListener('mousemove', doDrag);
+            document.addEventListener('mouseup', endDrag);
+            
+            // Touch events
+            slider.addEventListener('touchstart', startDrag);
+            document.addEventListener('touchmove', doDrag);
+            document.addEventListener('touchend', endDrag);
+            
+            // Click on container to move slider
+            container.addEventListener('click', (e) => {
+                if (e.target === slider) return;
+                updateComparisonSlider(getPercent(e));
+            });
+        }
+
+        function showError(message) {
+            document.getElementById('progressStatus').className = 'progress-status error';
+            document.getElementById('progressStatus').textContent = (i18n[currentLang]?.status_failed || 'Failed') + ': ' + message;
+            document.getElementById('processBtn').disabled = false;
+        }
+
+        function resetUI() {
+            clearFile();
+            document.getElementById('progressSection').classList.remove('active');
+            document.getElementById('resultSection').classList.remove('active');
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressBar').textContent = '0%';
+            document.getElementById('progressTime').textContent = '00:00';
+            currentTaskId = null;
+            myCurrentTaskId = null;
+            processStartTime = null;
+        }
+
+        
+        // Queue Status Functions - v1.4.0
+        let myCurrentTaskId = null;
+        
+        async function updateQueueStatus() {
+            try {
+                const res = await fetch('/api/queue/status');
+                const data = await res.json();
+                
+                // Update queue stats
+                document.getElementById('queueProcessing').textContent = data.processing ? '1' : '0';
+                document.getElementById('queueProcessing').className = 'queue-stat-value ' + (data.processing ? 'processing' : '');
+                document.getElementById('queueWaiting').textContent = data.queue_length;
+                document.getElementById('queueCompleted').textContent = data.total_completed;
+                
+                const avgTime = data.avg_process_time;
+                if (avgTime > 60) {
+                    document.getElementById('queueAvgTime').textContent = Math.floor(avgTime / 60) + 'm ' + Math.round(avgTime % 60) + 's';
+                } else {
+                    document.getElementById('queueAvgTime').textContent = Math.round(avgTime) + 's';
+                }
+                
+            } catch (e) {
+                console.error('Queue status error:', e);
+            }
+        }
+        
+        async function updateMyTaskStatus() {
+            if (!myCurrentTaskId) {
+                document.getElementById('myTaskStatus').classList.remove('active');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`/api/status/${myCurrentTaskId}`);
+                const data = await res.json();
+                
+                document.getElementById('myTaskStatus').classList.add('active');
+                document.getElementById('myTaskId').textContent = myCurrentTaskId;
+                
+                if (data.status === 'queued') {
+                    const posRes = await fetch(`/api/queue/position/${myCurrentTaskId}`);
+                    const posData = await posRes.json();
+                    document.getElementById('myTaskPosition').textContent = '#' + posData.position;
+                    const wait = posData.estimated_wait;
+                    document.getElementById('myTaskWait').textContent = wait > 60 ? Math.floor(wait/60) + 'm' : wait + 's';
+                    document.getElementById('myTaskStatus2').textContent = '⏳ ' + (i18n[currentLang]?.queue_waiting || 'Waiting');
+                } else if (data.status === 'processing') {
+                    document.getElementById('myTaskPosition').textContent = '#1';
+                    document.getElementById('myTaskWait').textContent = '-';
+                    document.getElementById('myTaskStatus2').textContent = '🔄 ' + data.progress + '%';
+                } else updateMyTaskStatus();
+                if (data.status === 'completed') {
+                    document.getElementById('myTaskPosition').textContent = '✓';
+                    document.getElementById('myTaskWait').textContent = '-';
+                    document.getElementById('myTaskStatus2').textContent = '✅ ' + (i18n[currentLang]?.status_completed || 'Done');
+                } else if (data.status === 'failed') {
+                    document.getElementById('myTaskPosition').textContent = '✗';
+                    document.getElementById('myTaskWait').textContent = '-';
+                    document.getElementById('myTaskStatus2').textContent = '❌ ' + (i18n[currentLang]?.status_failed || 'Failed');
+                }
+            } catch (e) {
+                console.error('My task status error:', e);
+            }
+        }
+        
+        // Override startProcess to track task
+        const originalStartProcess = startProcess;
+        startProcess = async function() {
+            // ... original code will be called, we just need to capture task_id
+        };
+
+
+        // Initialize
+        switchLang(currentLang);
+        loadModels();
+        updateGPUStatus();
+        initComparisonSlider();
+        setInterval(updateGPUStatus, 5000);
+        setInterval(updateQueueStatus, 3000);
+        setInterval(updateMyTaskStatus, 2000);
+        updateQueueStatus();
+    </script>
+
+    <!-- Project Footer -->
+    <footer class="project-footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <span class="footer-logo">🎬</span>
+                <span class="footer-title">SeedVR2 Docker All-in-One</span>
+                <span class="footer-version">v1.4.0</span>
+            </div>
+            <div class="footer-links">
+                <a href="https://github.com/neosun100/seedvr2-docker-allinone" target="_blank" class="footer-link">
+                    <svg class="footer-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span data-i18n="footer_star">⭐ Star on GitHub</span>
+                </a>
+                <a href="https://github.com/neosun100/seedvr2-docker-allinone/issues" target="_blank" class="footer-link">
+                    <svg class="footer-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    <span data-i18n="footer_issue">🐛 Report Issue</span>
+                </a>
+                <a href="https://hub.docker.com/r/neosun/seedvr2-allinone" target="_blank" class="footer-link">
+                    <svg class="footer-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.186m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288z"/></svg>
+                    <span data-i18n="footer_docker">🐳 Docker Hub</span>
+                </a>
+            </div>
+            <div class="footer-copyright">
+                Made with ❤️ by <a href="https://github.com/neosun100" target="_blank">NeoSun</a> | Based on <a href="https://github.com/ByteDance-Seed/SeedVR" target="_blank">ByteDance SeedVR2</a>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        
+        /* Queue Status Panel - v1.4.0 */
+        .queue-status-bar {
+            background: linear-gradient(135deg, #1a3a5c 0%, var(--card) 100%);
+            border-radius: 12px;
+            padding: 20px 25px;
+            margin-bottom: 24px;
+            border: 2px solid #2d5a8a;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+        .queue-stat {
+            text-align: center;
+        }
+        .queue-stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .queue-stat-value.processing {
+            color: var(--warning);
+            animation: pulse 1.5s infinite;
+        }
+        .queue-stat-value.waiting {
+            color: #3498db;
+        }
+        .queue-stat-value.completed {
+            color: var(--success);
+        }
+        .queue-stat-label {
+            font-size: 0.85em;
+            color: var(--text-dim);
+            margin-top: 5px;
+        }
+        .queue-pending-list {
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .queue-pending-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: var(--card);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--border);
+        }
+        .queue-pending-item.current {
+            border-left-color: var(--warning);
+            background: rgba(243, 156, 18, 0.1);
+        }
+        .queue-pending-item.mine {
+            border-left-color: var(--highlight);
+            background: rgba(233, 69, 96, 0.1);
+        }
+        .queue-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .queue-item-id {
+            font-weight: 600;
+            font-family: monospace;
+        }
+        .queue-item-params {
+            font-size: 0.8em;
+            color: var(--text-dim);
+        }
+        .queue-item-position {
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+        .queue-item-position.processing {
+            color: var(--warning);
+        }
+        .queue-empty {
+            text-align: center;
+            color: var(--text-dim);
+            padding: 20px;
+        }
+        .my-task-status {
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.2) 0%, var(--card) 100%);
+            border: 2px solid var(--highlight);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: none;
+        }
+        .my-task-status.active {
+            display: block;
+        }
+        .my-task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .my-task-title {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+        .my-task-id {
+            font-family: monospace;
+            background: var(--accent);
+            padding: 3px 10px;
+            border-radius: 6px;
+        }
+        .my-task-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+        .my-task-item {
+            text-align: center;
+        }
+        .my-task-value {
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        .my-task-label {
+            font-size: 0.8em;
+            color: var(--text-dim);
+        }
+
+        .project-footer {
+            margin-top: 60px;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, var(--card) 0%, #12121f 100%);
+            border-top: 1px solid var(--border);
+            border-radius: 20px 20px 0 0;
+        }
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .footer-logo {
+            font-size: 2em;
+        }
+        .footer-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            background: linear-gradient(135deg, #fff 0%, var(--highlight) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .footer-version {
+            background: var(--highlight);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .footer-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+            text-decoration: none;
+            padding: 10px 20px;
+            background: var(--accent);
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+        }
+        .footer-link:hover {
+            background: var(--highlight);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.3);
+        }
+        .footer-icon {
+            width: 18px;
+            height: 18px;
+        }
+        .footer-copyright {
+            color: var(--text-dim);
+            font-size: 0.9em;
+        }
+        .footer-copyright a {
+            color: var(--highlight);
+            text-decoration: none;
+        }
+        .footer-copyright a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .footer-links {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .footer-link {
+                justify-content: center;
+            }
+            .footer-brand {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</body>
+</html>
