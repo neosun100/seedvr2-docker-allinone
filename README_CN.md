@@ -1,4 +1,4 @@
-[English](README_NEW.md) | [简体中文](README_CN.md) | [繁體中文](README_TW.md) | [日本語](README_JP.md)
+[English](README.md) | [简体中文](README_CN.md) | [繁體中文](README_TW.md) | [日本語](README_JP.md)
 
 <div align="center">
 
@@ -48,11 +48,11 @@
 ### 一行命令启动
 
 ```bash
-# 完整版，包含全部 12 个模型 (103GB)
+# 完整版，包含全部 12 个模型 (103GB) - 推荐
 docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:latest
 
-# 轻量版：仅 7B Sharp FP16 (~15GB)
-docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:v1.3.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual
+# 轻量版：仅 7B Sharp FP16 (~27GB)
+docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:v1.4.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual
 ```
 
 然后打开：**http://localhost:8200**
@@ -61,18 +61,19 @@ docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:v1.3.0-7b-sharp-fp
 
 ## 🐳 Docker 镜像
 
-### 可用标签
+### 可用标签 (v1.4.0)
 
 | 镜像标签 | 包含模型 | 大小 | 适用场景 |
 |----------|----------|------|----------|
-| `v1.3.0-12models-16k-vaetiling-h264-memfix-bilingual` | 全部 12 个 | ~103GB | 完整功能 |
-| `v1.3.0-3b-fast-4models-16k-vaetiling-h264-bilingual` | 4× 3B | ~35GB | 快速处理 |
-| `v1.3.0-7b-quality-4models-16k-vaetiling-h264-bilingual` | 4× 7B | ~55GB | 高质量 |
-| `v1.3.0-7b-sharp-4models-16k-vaetiling-h264-bilingual` | 4× 7B Sharp | ~55GB | 细节增强 |
-| `v1.3.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual` | 1× 7B Sharp FP16 | ~15GB | 最小体积 |
+| `latest` / `v1.4.0` | 全部 12 个 | ~103GB | 完整功能 + 任务队列 |
+| `v1.4.0-12models-16k-vaetiling-h264-bilingual` | 全部 12 个 | ~103GB | 完整功能 |
+| `v1.4.0-3b-fast-4models-16k-vaetiling-h264-bilingual` | 4× 3B | ~26GB | 快速处理 |
+| `v1.4.0-7b-quality-4models-16k-vaetiling-h264-bilingual` | 4× 7B | ~49GB | 高质量 |
+| `v1.4.0-7b-sharp-4models-16k-vaetiling-h264-bilingual` | 4× 7B Sharp | ~49GB | 细节增强 |
+| `v1.4.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual` | 1× 7B Sharp FP16 | ~27GB | 最小体积 |
 
 ### 标签命名规则
-- `v1.3.0` - 版本号
+- `v1.4.0` - 版本号
 - `12models/4models/fp16-only` - 模型数量
 - `16k` - 最高支持 16K 分辨率
 - `vaetiling` - VAE Tiling 高分辨率处理
@@ -96,7 +97,8 @@ docker run -d \
   --name seedvr2 \
   --gpus '"device=0"' \
   -p 8200:8200 \
-  -v ./outputs:/app/outputs \
+  -v /tmp/seedvr2/uploads:/app/uploads \
+  -v /tmp/seedvr2/outputs:/app/outputs \
   -e NVIDIA_VISIBLE_DEVICES=0 \
   neosun/seedvr2-allinone:latest
 ```
@@ -111,7 +113,8 @@ services:
     ports:
       - "8200:8200"
     volumes:
-      - ./outputs:/app/outputs
+      - /tmp/seedvr2/uploads:/app/uploads
+      - /tmp/seedvr2/outputs:/app/outputs
     deploy:
       resources:
         reservations:
@@ -186,6 +189,9 @@ python server.py
 | `/api/process` | POST | 开始处理 |
 | `/api/task/{id}` | GET | 获取任务状态 |
 | `/api/download/{id}` | GET | 下载结果 |
+| `/api/queue/status` | GET | 队列概览 (v1.4.0) |
+| `/api/queue/position/{id}` | GET | 任务队列位置 (v1.4.0) |
+| `/api/queue/history` | GET | 已完成任务历史 (v1.4.0) |
 
 ### API 调用示例
 ```bash
@@ -253,6 +259,22 @@ curl -X POST http://localhost:8200/api/process \
 - `get_task_position()` - 检查队列位置
 - `wait_for_task()` - 阻塞等待完成
 
+### v1.3.3 - UI 增强 (2025-12-26)
+- ✅ **项目页脚** - Web UI 添加 GitHub/Docker Hub 链接
+- ✅ 改进 UI 布局和品牌展示
+
+### v1.3.2 - 隐私与安全 (2025-12-26)
+- 🔒 **隐私修复** - 从 Docker 镜像中移除所有用户文件
+- 📁 **卷挂载** - 推荐使用宿主机目录挂载部署
+- 📁 **tmpfs 选项** - 使用内存存储实现最大隐私
+- 📖 **MCP 文档** - 完整的客户端注册示例（Claude Desktop、Cursor）
+- 📖 **微信文章** - 添加项目推广文章
+
+### v1.3.1 - MCP 修复 (2025-12-26)
+- 🐛 **BFloat16 修复** - 修复 MCP 中 "Got unsupported ScalarType BFloat16" 错误
+- ✅ 在 numpy 转换前添加 tensor dtype 转换
+- ✅ 与 server.py 实现保持一致
+
 ### v1.3.0 - 一体化发布版 (2025-12-26)
 #### 新功能
 - ✅ VAE 质量预设（省显存/平衡/高质量）
@@ -300,6 +322,7 @@ curl -X POST http://localhost:8200/api/process \
 ```
 seedvr2-docker-allinone/
 ├── server.py           # Flask Web 服务器
+├── mcp_server.py       # MCP 服务器（AI 助手集成）
 ├── templates/
 │   └── index.html      # Web UI
 ├── src/                # 核心处理模块
