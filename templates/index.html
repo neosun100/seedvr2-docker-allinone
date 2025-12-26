@@ -992,7 +992,7 @@
         let selectedFile = null;
         let selectedModel = null;
         let currentTaskId = null;
-            myCurrentTaskId = null;
+        let myCurrentTaskId = null;
         let processStartTime = null;
         let timerInterval = null;
         let modelsData = [];
@@ -1469,13 +1469,11 @@
             document.getElementById('progressBar').textContent = '0%';
             document.getElementById('progressTime').textContent = '00:00';
             currentTaskId = null;
-            myCurrentTaskId = null;
             processStartTime = null;
         }
 
         
         // Queue Status Functions - v1.4.0
-        let myCurrentTaskId = null;
         
         async function updateQueueStatus() {
             try {
