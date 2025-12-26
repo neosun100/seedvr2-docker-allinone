@@ -7,7 +7,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/neosun/seedvr2-allinone?style=for-the-badge&logo=docker)](https://hub.docker.com/r/neosun/seedvr2-allinone)
 [![GitHub Stars](https://img.shields.io/github/stars/neosun100/seedvr2-docker-allinone?style=for-the-badge&logo=github)](https://github.com/neosun100/seedvr2-docker-allinone)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.3.1-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
+[![Version](https://img.shields.io/badge/Version-1.3.2-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
 
 **🚀 One-Click Deploy AI Video/Image Upscaler with Web UI**
 
@@ -31,17 +31,38 @@
 | **VAE Tiling** | Smart auto-enable for high-res processing |
 | **H.264 Encoding** | Browser-compatible video + audio preservation |
 | **Bilingual UI** | Chinese/English/Traditional Chinese/Japanese |
+| **Privacy Safe** | No user files stored in image |
 
 ---
 
 ## 🚀 Quick Start
 
-```bash
-# Full version with all 12 models (103GB)
-docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:latest
+### Recommended: With Volume Mounts (Privacy Safe)
 
-# Lightweight: 7B Sharp FP16 only (~27GB)
-docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:v1.3.1-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual
+```bash
+# Create directories on host
+mkdir -p /tmp/seedvr2-docker-allinone/uploads /tmp/seedvr2-docker-allinone/outputs
+
+# Run with volume mounts - files stored on host, not in container
+docker run -d --gpus all -p 8200:8200 \
+  -v /tmp/seedvr2-docker-allinone/uploads:/app/uploads \
+  -v /tmp/seedvr2-docker-allinone/outputs:/app/outputs \
+  neosun/seedvr2-allinone:latest
+```
+
+### Simple Start (Files stored in container)
+
+```bash
+docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:latest
+```
+
+### Lightweight Version
+
+```bash
+docker run -d --gpus all -p 8200:8200 \
+  -v /tmp/seedvr2-docker-allinone/uploads:/app/uploads \
+  -v /tmp/seedvr2-docker-allinone/outputs:/app/outputs \
+  neosun/seedvr2-allinone:v1.3.2-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual
 ```
 
 Then open:
@@ -51,15 +72,50 @@ Then open:
 
 ---
 
+## 🔒 Privacy & Storage Options
+
+### Option 1: Host Volume Mount (Recommended)
+
+Files are stored on the host machine, giving you full control:
+
+```bash
+docker run -d --gpus all -p 8200:8200 \
+  -v /path/to/uploads:/app/uploads \
+  -v /path/to/outputs:/app/outputs \
+  neosun/seedvr2-allinone:latest
+```
+
+- ✅ Files persist on host
+- ✅ Easy to manage and clean up
+- ✅ No data in container
+
+### Option 2: tmpfs (Memory Storage)
+
+Files are stored in RAM and cleared on container restart:
+
+```bash
+docker run -d --gpus all -p 8200:8200 \
+  --tmpfs /app/uploads:size=10G \
+  --tmpfs /app/outputs:size=50G \
+  neosun/seedvr2-allinone:latest
+```
+
+- ✅ Maximum privacy - data cleared on restart
+- ✅ Fast I/O performance
+- ⚠️ Requires sufficient RAM
+- ⚠️ Data lost on container stop
+
+---
+
 ## 🐳 Docker Images
 
 | Image Tag | Models | Size | Use Case |
 |-----------|--------|------|----------|
-| `latest` / `v1.3.1-12models-*` | All 12 | ~103GB | Full features |
-| `v1.3.1-3b-fast-4models-*` | 4× 3B | ~26GB | Fast processing |
-| `v1.3.1-7b-quality-4models-*` | 4× 7B | ~49GB | High quality |
-| `v1.3.1-7b-sharp-4models-*` | 4× 7B Sharp | ~49GB | Detail enhancement |
-| `v1.3.1-7b-sharp-fp16-only-*` | 1× 7B Sharp FP16 | ~27GB | Minimal size |
+| `latest` / `v1.3.2-12models-*` | All 12 | ~103GB | Full features |
+| `v1.3.2-3b-fast-4models-*` | 4× 3B | ~26GB | Fast processing |
+| `v1.3.2-7b-quality-4models-*` | 4× 7B | ~49GB | High quality |
+| `v1.3.2-7b-sharp-4models-*` | 4× 7B Sharp | ~49GB | Detail enhancement |
+| `v1.3.2-7b-sharp-fp16-only-*` | 1× 7B Sharp FP16 | ~27GB | Minimal size |
 
 ---
 
@@ -207,6 +263,12 @@ python mcp_server.py
 ---
 
 ## 📊 Changelog
+
+### v1.3.2 (2025-12-26)
+- 🔒 **Privacy Fix**: Removed all user files from Docker images
+- 📁 Added volume mount documentation for privacy-safe deployment
+- 📁 Added tmpfs option for maximum privacy (memory storage)
+- 🧹 Clean `/app/uploads` and `/app/outputs` directories in all images
 
 ### v1.3.1 (2025-12-26)
 - 🐛 Fixed MCP BFloat16 conversion error in upscale_image/upscale_video
