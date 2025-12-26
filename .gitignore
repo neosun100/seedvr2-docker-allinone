@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project
+outputs/
+uploads/
+*.log
+
+# Models (use Git LFS or download separately)
+models/SEEDVR2/*.safetensors
+models/SEEDVR2/*.gguf
+!models/SEEDVR2/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db

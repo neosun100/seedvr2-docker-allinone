@@ -1,0 +1,31 @@
+services:
+  seedvr2:
+    build: .
+    image: seedvr2-upscaler:latest
+    container_name: seedvr2-upscaler
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8200}:8200"
+    volumes:
+      - ./models:/app/models
+      - ./uploads:/app/uploads
+      - ./outputs:/app/outputs
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
+      - GPU_IDLE_TIMEOUT=${GPU_IDLE_TIMEOUT:-600}
+      - DEFAULT_RESOLUTION=${DEFAULT_RESOLUTION:-1080}
+      - DEFAULT_BATCH_SIZE=${DEFAULT_BATCH_SIZE:-5}
+      - MAX_UPLOAD_SIZE=${MAX_UPLOAD_SIZE:-500}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8200/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
