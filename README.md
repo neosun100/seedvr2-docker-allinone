@@ -1,4 +1,4 @@
-[English](README_NEW.md) | [简体中文](README_CN.md) | [繁體中文](README_TW.md) | [日本語](README_JP.md)
+[English](README.md) | [简体中文](README_CN.md) | [繁體中文](README_TW.md) | [日本語](README_JP.md)
 
 <div align="center">
 
@@ -50,11 +50,11 @@
 ### One-Line Docker Run
 
 ```bash
-# Full version with all 12 models (103GB)
+# Full version with all 12 models (103GB) - Recommended
 docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:latest
 
-# Lightweight: 7B Sharp FP16 only (~15GB)
-docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:v1.3.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual
+# Lightweight: 7B Sharp FP16 only (~27GB)
+docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:v1.4.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual
 ```
 
 Then open: **http://localhost:8200**
@@ -63,18 +63,19 @@ Then open: **http://localhost:8200**
 
 ## 🐳 Docker Images
 
-### Available Tags
+### Available Tags (v1.4.0)
 
 | Image Tag | Models | Size | Use Case |
 |-----------|--------|------|----------|
-| `v1.3.0-12models-16k-vaetiling-h264-memfix-bilingual` | All 12 | ~103GB | Full features |
-| `v1.3.0-3b-fast-4models-16k-vaetiling-h264-bilingual` | 4× 3B | ~26GB | Fast processing |
-| `v1.3.0-7b-quality-4models-16k-vaetiling-h264-bilingual` | 4× 7B | ~49GB | High quality |
-| `v1.3.0-7b-sharp-4models-16k-vaetiling-h264-bilingual` | 4× 7B Sharp | ~49GB | Detail enhancement |
-| `v1.3.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual` | 1× 7B Sharp FP16 | ~27GB | Minimal size |
+| `latest` / `v1.4.0` | All 12 | ~103GB | Full features + Task Queue |
+| `v1.4.0-12models-16k-vaetiling-h264-bilingual` | All 12 | ~103GB | Full features |
+| `v1.4.0-3b-fast-4models-16k-vaetiling-h264-bilingual` | 4× 3B | ~26GB | Fast processing |
+| `v1.4.0-7b-quality-4models-16k-vaetiling-h264-bilingual` | 4× 7B | ~49GB | High quality |
+| `v1.4.0-7b-sharp-4models-16k-vaetiling-h264-bilingual` | 4× 7B Sharp | ~49GB | Detail enhancement |
+| `v1.4.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual` | 1× 7B Sharp FP16 | ~27GB | Minimal size |
 
 ### Tag Naming Convention
-- `v1.3.0` - Version
+- `v1.4.0` - Version
 - `12models/4models/fp16-only` - Model count
 - `16k` - Max resolution support
 - `vaetiling` - VAE Tiling for high-res
@@ -90,7 +91,9 @@ Best for users who want all model options.
 
 ```bash
 docker run -d --name seedvr2 --gpus all -p 8200:8200 \
-  neosun/seedvr2-allinone:v1.3.0-12models-16k-vaetiling-h264-memfix-bilingual
+  -v /tmp/seedvr2/uploads:/app/uploads \
+  -v /tmp/seedvr2/outputs:/app/outputs \
+  neosun/seedvr2-allinone:latest
 ```
 
 **Included Models:**
@@ -105,7 +108,7 @@ Best for fast processing and low VRAM GPUs.
 
 ```bash
 docker run -d --name seedvr2-3b --gpus all -p 8200:8200 \
-  neosun/seedvr2-allinone:v1.3.0-3b-fast-4models-16k-vaetiling-h264-bilingual
+  neosun/seedvr2-allinone:v1.4.0-3b-fast-4models-16k-vaetiling-h264-bilingual
 ```
 
 **Included Models:**
@@ -123,7 +126,7 @@ Best for high-quality output.
 
 ```bash
 docker run -d --name seedvr2-7b --gpus all -p 8200:8200 \
-  neosun/seedvr2-allinone:v1.3.0-7b-quality-4models-16k-vaetiling-h264-bilingual
+  neosun/seedvr2-allinone:v1.4.0-7b-quality-4models-16k-vaetiling-h264-bilingual
 ```
 
 **Included Models:**
@@ -141,7 +144,7 @@ Best for detail enhancement and sharpening.
 
 ```bash
 docker run -d --name seedvr2-sharp --gpus all -p 8200:8200 \
-  neosun/seedvr2-allinone:v1.3.0-7b-sharp-4models-16k-vaetiling-h264-bilingual
+  neosun/seedvr2-allinone:v1.4.0-7b-sharp-4models-16k-vaetiling-h264-bilingual
 ```
 
 **Included Models:**
@@ -159,7 +162,7 @@ Minimal size with best quality model.
 
 ```bash
 docker run -d --name seedvr2-minimal --gpus all -p 8200:8200 \
-  neosun/seedvr2-allinone:v1.3.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual
+  neosun/seedvr2-allinone:v1.4.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual
 ```
 
 **Included Models:**
@@ -184,7 +187,8 @@ docker run -d \
   --name seedvr2 \
   --gpus '"device=0"' \
   -p 8200:8200 \
-  -v ./outputs:/app/outputs \
+  -v /tmp/seedvr2/uploads:/app/uploads \
+  -v /tmp/seedvr2/outputs:/app/outputs \
   -e NVIDIA_VISIBLE_DEVICES=0 \
   neosun/seedvr2-allinone:latest
 ```
@@ -199,7 +203,8 @@ services:
     ports:
       - "8200:8200"
     volumes:
-      - ./outputs:/app/outputs
+      - /tmp/seedvr2/uploads:/app/uploads
+      - /tmp/seedvr2/outputs:/app/outputs
     deploy:
       resources:
         reservations:
@@ -274,6 +279,9 @@ python server.py
 | `/api/process` | POST | Start processing |
 | `/api/task/{id}` | GET | Get task status |
 | `/api/download/{id}` | GET | Download result |
+| `/api/queue/status` | GET | Queue overview (v1.4.0) |
+| `/api/queue/position/{id}` | GET | Task position in queue (v1.4.0) |
+| `/api/queue/history` | GET | Completed task history (v1.4.0) |
 
 ### Example API Call
 ```bash
@@ -341,6 +349,22 @@ curl -X POST http://localhost:8200/api/process \
 - `get_task_position()` - Check queue position
 - `wait_for_task()` - Blocking wait for completion
 
+### v1.3.3 - UI Enhancement (2025-12-26)
+- ✅ **Project Footer** - Added GitHub/Docker Hub links in Web UI
+- ✅ Improved UI layout and branding
+
+### v1.3.2 - Privacy & Security (2025-12-26)
+- 🔒 **Privacy Fix** - Removed all user files from Docker images
+- 📁 **Volume Mount** - Recommended deployment with host directory mount
+- 📁 **tmpfs Option** - Maximum privacy with memory-only storage
+- 📖 **MCP Documentation** - Complete client registration examples (Claude Desktop, Cursor)
+- 📖 **WeChat Article** - Added project promotion article
+
+### v1.3.1 - MCP Bugfix (2025-12-26)
+- 🐛 **BFloat16 Fix** - Fixed "Got unsupported ScalarType BFloat16" error in MCP
+- ✅ Added tensor dtype conversion before numpy conversion
+- ✅ Matches server.py implementation
+
 ### v1.3.0 - All-in-One Release (2025-12-26)
 #### New Features
 - ✅ VAE Quality presets (Low/Balanced/High)
@@ -388,6 +412,7 @@ curl -X POST http://localhost:8200/api/process \
 ```
 seedvr2-docker-allinone/
 ├── server.py           # Flask web server
+├── mcp_server.py       # MCP server for AI assistants
 ├── templates/
 │   └── index.html      # Web UI
 ├── src/                # Core processing modules
