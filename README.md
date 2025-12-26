@@ -65,10 +65,10 @@ Then open: **http://localhost:8200**
 | Image Tag | Models | Size | Use Case |
 |-----------|--------|------|----------|
 | `v1.3.0-12models-16k-vaetiling-h264-memfix-bilingual` | All 12 | ~103GB | Full features |
-| `v1.3.0-3b-fast-4models-16k-vaetiling-h264-bilingual` | 4× 3B | ~35GB | Fast processing |
-| `v1.3.0-7b-quality-4models-16k-vaetiling-h264-bilingual` | 4× 7B | ~55GB | High quality |
-| `v1.3.0-7b-sharp-4models-16k-vaetiling-h264-bilingual` | 4× 7B Sharp | ~55GB | Detail enhancement |
-| `v1.3.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual` | 1× 7B Sharp FP16 | ~15GB | Minimal size |
+| `v1.3.0-3b-fast-4models-16k-vaetiling-h264-bilingual` | 4× 3B | ~26GB | Fast processing |
+| `v1.3.0-7b-quality-4models-16k-vaetiling-h264-bilingual` | 4× 7B | ~49GB | High quality |
+| `v1.3.0-7b-sharp-4models-16k-vaetiling-h264-bilingual` | 4× 7B Sharp | ~49GB | Detail enhancement |
+| `v1.3.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual` | 1× 7B Sharp FP16 | ~27GB | Minimal size |
 
 ### Tag Naming Convention
 - `v1.3.0` - Version
@@ -77,6 +77,92 @@ Then open: **http://localhost:8200**
 - `vaetiling` - VAE Tiling for high-res
 - `h264` - H.264 encoding + audio
 - `bilingual` - CN/EN UI
+
+---
+
+### 📦 Image Details & Quick Start
+
+#### 1. Full Version (All 12 Models) - 103GB
+Best for users who want all model options.
+
+```bash
+docker run -d --name seedvr2 --gpus all -p 8200:8200 \
+  neosun/seedvr2-allinone:v1.3.0-12models-16k-vaetiling-h264-memfix-bilingual
+```
+
+**Included Models:**
+- 3B: FP16, FP8, GGUF-Q8, GGUF-Q4
+- 7B: FP16, FP8, GGUF-Q8, GGUF-Q4
+- 7B Sharp: FP16, FP8, GGUF-Q8, GGUF-Q4
+
+---
+
+#### 2. 3B Fast (4 Models) - 26GB
+Best for fast processing and low VRAM GPUs.
+
+```bash
+docker run -d --name seedvr2-3b --gpus all -p 8200:8200 \
+  neosun/seedvr2-allinone:v1.3.0-3b-fast-4models-16k-vaetiling-h264-bilingual
+```
+
+**Included Models:**
+- seedvr2_ema_3b_fp16.safetensors (6.4GB, 12GB VRAM)
+- seedvr2_ema_3b_fp8_e4m3fn.safetensors (3.2GB, 8GB VRAM)
+- seedvr2_ema_3b-Q8_0.gguf (3.5GB, 6GB VRAM)
+- seedvr2_ema_3b-Q4_K_M.gguf (1.9GB, 4GB VRAM)
+
+**Use Case:** Quick preview, low-end GPUs (GTX 1080, RTX 3060)
+
+---
+
+#### 3. 7B Quality (4 Models) - 49GB
+Best for high-quality output.
+
+```bash
+docker run -d --name seedvr2-7b --gpus all -p 8200:8200 \
+  neosun/seedvr2-allinone:v1.3.0-7b-quality-4models-16k-vaetiling-h264-bilingual
+```
+
+**Included Models:**
+- seedvr2_ema_7b_fp16.safetensors (16GB, 24GB VRAM)
+- seedvr2_ema_7b_fp8_e4m3fn.safetensors (8GB, 16GB VRAM)
+- seedvr2_ema_7b-Q8_0.gguf (8GB, 12GB VRAM)
+- seedvr2_ema_7b-Q4_K_M.gguf (4GB, 8GB VRAM)
+
+**Use Case:** Professional quality, mid-range GPUs (RTX 3080, RTX 4070)
+
+---
+
+#### 4. 7B Sharp (4 Models) - 49GB
+Best for detail enhancement and sharpening.
+
+```bash
+docker run -d --name seedvr2-sharp --gpus all -p 8200:8200 \
+  neosun/seedvr2-allinone:v1.3.0-7b-sharp-4models-16k-vaetiling-h264-bilingual
+```
+
+**Included Models:**
+- seedvr2_ema_7b_sharp_fp16.safetensors (16GB, 24GB VRAM)
+- seedvr2_ema_7b_sharp_fp8_e4m3fn.safetensors (8GB, 16GB VRAM)
+- seedvr2_ema_7b_sharp-Q8_0.gguf (8GB, 12GB VRAM)
+- seedvr2_ema_7b_sharp-Q4_K_M.gguf (4GB, 8GB VRAM)
+
+**Use Case:** Maximum detail, texture enhancement, high-end GPUs (RTX 4080, RTX 4090)
+
+---
+
+#### 5. 7B Sharp FP16 Only - 27GB
+Minimal size with best quality model.
+
+```bash
+docker run -d --name seedvr2-minimal --gpus all -p 8200:8200 \
+  neosun/seedvr2-allinone:v1.3.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual
+```
+
+**Included Models:**
+- seedvr2_ema_7b_sharp_fp16.safetensors (16GB, 24GB VRAM)
+
+**Use Case:** Best quality with minimal download, RTX 4090 / A100 users
 
 ---
 
@@ -133,6 +219,68 @@ curl http://localhost:8200/health
 # {"status": "healthy", "gpu": "available"}
 ```
 
+### Method 2: Manual Installation
+
+```bash
+# Clone repository
+git clone https://github.com/neosun100/seedvr2-docker-allinone.git
+cd seedvr2-docker-allinone
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# or: venv\Scripts\activate  # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Download models (auto-download on first use)
+# Or manually place in models/SEEDVR2/
+
+# Start server
+python server.py
+```
+
+---
+
+## 🎮 Usage
+
+### Web Interface
+
+1. Open **http://localhost:8200**
+2. Select AI model (3B/7B/7B-Sharp)
+3. Upload video/image
+4. Configure parameters:
+   - **Resolution**: 480p - 16K
+   - **Batch Size**: 1-25 (use 4n+1 formula: 1,5,9,13...)
+   - **Color Correction**: LAB/Wavelet/HSV/AdaIN/None
+   - **VAE Tiling**: Auto/On/Off
+   - **VAE Quality**: Low VRAM/Balanced/High Quality
+5. Click "Start Processing"
+6. Preview with comparison slider
+7. Download result
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check |
+| `/api/gpu/status` | GET | GPU status |
+| `/api/models` | GET | List available models |
+| `/api/models/switch` | POST | Load model to GPU |
+| `/api/process` | POST | Start processing |
+| `/api/task/{id}` | GET | Get task status |
+| `/api/download/{id}` | GET | Download result |
+
+### Example API Call
+```bash
+curl -X POST http://localhost:8200/api/process \
+  -F "file=@input.mp4" \
+  -F "resolution=1080" \
+  -F "batch_size=5" \
+  -F "dit_model=seedvr2_ema_7b_sharp_fp16.safetensors"
+```
+
 ---
 
 ## ⚙️ Configuration
@@ -171,7 +319,7 @@ curl http://localhost:8200/health
 
 ## 📊 Changelog
 
-### v1.3.0 - All-in-One Release (2024-12-26)
+### v1.3.0 - All-in-One Release (2025-12-26)
 #### New Features
 - ✅ VAE Quality presets (Low/Balanced/High)
 - ✅ Ultra-high resolution: 10K/12K/16K support
@@ -183,16 +331,16 @@ curl http://localhost:8200/health
 - ✅ Memory management optimization
 - ✅ 5 Docker images for different use cases
 
-### v1.2.2 - VAE Tiling Fix (2024-12-25)
+### v1.2.2 - VAE Tiling Fix (2025-12-25)
 - 🐛 Fixed "cannot unpack non-iterable NoneType" error
 - ✅ Added default tile_size/tile_overlap values
 
-### v1.2.1 - Memory Optimization (2024-12-25)
+### v1.2.1 - Memory Optimization (2025-12-25)
 - ✅ Auto GPU memory cleanup (finally block)
 - ✅ Force cache clear after upscale phase
 - ✅ Model offload to CPU
 
-### v1.2.0 - UI Enhancement (2024-12-25)
+### v1.2.0 - UI Enhancement (2025-12-25)
 - ✅ Before/After comparison slider
 - ✅ Resolution presets (480p-8K)
 - ✅ VAE Tiling UI control
@@ -200,16 +348,35 @@ curl http://localhost:8200/health
 - ✅ Audio preservation from original video
 - ✅ Rich output filename format
 
-### v1.1.0 - All Models (2024-12-24)
+### v1.1.0 - All Models (2025-12-24)
 - ✅ All 12 models tested and working
 - ✅ Model hot-switching support
 - ✅ Preload to memory feature
 
-### v1.0.0 - Docker Release (2024-12-24)
+### v1.0.0 - Docker Release (2025-12-24)
 - ✅ Docker containerization
 - ✅ Web UI / API / MCP modes
 - ✅ GPU auto-detection
 - ✅ Bilingual interface (CN/EN)
+
+---
+
+## 🏗️ Project Structure
+
+```
+seedvr2-docker-allinone/
+├── server.py           # Flask web server
+├── templates/
+│   └── index.html      # Web UI
+├── src/                # Core processing modules
+├── models/SEEDVR2/     # AI models (auto-download)
+├── configs_3b/         # 3B model configs
+├── configs_7b/         # 7B model configs
+├── Dockerfile          # Docker build file
+├── docker-compose.yml  # Docker Compose config
+├── requirements.txt    # Python dependencies
+└── outputs/            # Processing results
+```
 
 ---
 
@@ -221,6 +388,18 @@ curl http://localhost:8200/health
 - **Frontend**: Vanilla JS, CSS3
 - **Container**: Docker, NVIDIA Container Toolkit
 - **Video**: OpenCV, FFmpeg (H.264)
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing`)
+5. Open Pull Request
 
 ---
 
