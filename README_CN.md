@@ -7,7 +7,8 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/neosun/seedvr2-allinone?style=for-the-badge&logo=docker)](https://hub.docker.com/r/neosun/seedvr2-allinone)
 [![GitHub Stars](https://img.shields.io/github/stars/neosun100/seedvr2-docker-allinone?style=for-the-badge&logo=github)](https://github.com/neosun100/seedvr2-docker-allinone)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.4.0-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
+[![Version](https://img.shields.io/badge/Version-1.4.2-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
+[![Stable](https://img.shields.io/badge/Stable-1.3.3-blue?style=for-the-badge)](https://hub.docker.com/r/neosun/seedvr2-allinone/tags)
 
 **🚀 一键部署 AI 视频/图片超分辨率 Web 服务**
 
@@ -15,6 +16,16 @@
 
 [快速开始](#-快速开始) • [功能特性](#-功能特性) • [Docker 镜像](#-docker-镜像) • [更新日志](#-更新日志)
 
+</div>
+
+---
+
+## 🖼️ Web 界面预览
+
+<div align="center">
+<img src="docs/ui_screenshot.png" alt="SeedVR2 Web UI" width="800">
+
+*功能完整的 Web 界面，支持模型选择、队列管理、中英双语*
 </div>
 
 ---

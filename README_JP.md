@@ -7,14 +7,23 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/neosun/seedvr2-allinone?style=for-the-badge&logo=docker)](https://hub.docker.com/r/neosun/seedvr2-allinone)
 [![GitHub Stars](https://img.shields.io/github/stars/neosun100/seedvr2-docker-allinone?style=for-the-badge&logo=github)](https://github.com/neosun100/seedvr2-docker-allinone)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.4.0-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
+[![Version](https://img.shields.io/badge/Version-1.4.2-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
+[![Stable](https://img.shields.io/badge/Stable-1.3.3-blue?style=for-the-badge)](https://hub.docker.com/r/neosun/seedvr2-allinone/tags)
 
 **🚀 ワンクリックでAI動画/画像アップスケーラーをデプロイ**
 
 *[ByteDance SeedVR2](https://github.com/ByteDance-Seed/SeedVR) ベース | 強化版 Docker オールインワン*
 
-<img src="https://img.aws.xin/uPic/IaHGPU.png" alt="Web UI スクリーンショット">
+</div>
 
+---
+
+## 🖼️ Web UI プレビュー
+
+<div align="center">
+<img src="docs/ui_screenshot.png" alt="SeedVR2 Web UI" width="800">
+
+*フル機能のWeb UI、モデル選択、キュー管理、バイリンガル対応*
 </div>
 
 ---

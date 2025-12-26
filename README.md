@@ -16,8 +16,16 @@
 
 [Quick Start](#-quick-start) • [Features](#-features) • [Docker Images](#-docker-images) • [API Docs](#-api-documentation) • [Changelog](#-changelog)
 
-<img src="https://img.aws.xin/uPic/IaHGPU.png" alt="Web UI Screenshot" width="280">
+</div>
 
+---
+
+## 🖼️ Web UI Preview
+
+<div align="center">
+<img src="docs/ui_screenshot.png" alt="SeedVR2 Web UI" width="800">
+
+*Full-featured Web UI with model selection, queue management, and bilingual support*
 </div>
 
 ---
