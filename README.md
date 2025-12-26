@@ -13,9 +13,9 @@
 
 *Based on [ByteDance SeedVR2](https://github.com/ByteDance-Seed/SeedVR) | Enhanced Docker All-in-One Edition*
 
-[Quick Start](#-quick-start) • [Features](#-features) • [Docker Images](#-docker-images) • [Changelog](#-changelog)
+[Quick Start](#-quick-start) • [Features](#-features) • [API Docs](#-api-documentation) • [Docker Images](#-docker-images)
 
-<img src="https://img.aws.xin/uPic/IaHGPU.png" alt="Web UI Screenshot" width="280">
+<img src="https://img.aws.xin/uPic/IaHGPU.png" alt="Web UI Screenshot">
 
 </div>
 
@@ -23,30 +23,18 @@
 
 ## ✨ Features
 
-### 🎯 Core Capabilities
 | Feature | Description |
 |---------|-------------|
 | **12 AI Models** | 3B/7B/7B-Sharp × FP16/FP8/GGUF variants |
-| **Resolution Support** | 480p → 16K (custom supported) |
-| **VAE Tiling** | High-resolution processing with smart auto-enable |
+| **3 Interfaces** | Web UI + REST API + MCP (Model Context Protocol) |
+| **Resolution** | 480p → 16K (custom supported) |
+| **VAE Tiling** | Smart auto-enable for high-res processing |
 | **H.264 Encoding** | Browser-compatible video + audio preservation |
-| **Bilingual UI** | Chinese/English interface with one-click switch |
-
-### 🆕 Enhanced Features (vs Original)
-| Enhancement | Details |
-|-------------|---------|
-| **Web UI** | Modern responsive interface with comparison slider |
-| **Smart VAE** | Auto-enable: Video ≥2K / Image ≥5K |
-| **VAE Quality** | 3 presets: Low VRAM (512) / Balanced (768) / High Quality (1024) |
-| **Memory Management** | Auto cleanup, model offloading, optimized pipeline |
-| **Rich Filename** | `{name}_{model}_{res}p_b{batch}_c{color}_s{seed}[_vae{quality}]_{time}s` |
-| **Docker Ready** | 5 pre-built images for different use cases |
+| **Bilingual UI** | Chinese/English/Traditional Chinese/Japanese |
 
 ---
 
 ## 🚀 Quick Start
-
-### One-Line Docker Run
 
 ```bash
 # Full version with all 12 models (103GB)
@@ -56,56 +44,165 @@ docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:latest
 docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:v1.3.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual
 ```
 
-Then open: **http://localhost:8200**
+Then open:
+- **Web UI**: http://localhost:8200
+- **API Docs (Swagger)**: http://localhost:8200/apidocs
+- **Health Check**: http://localhost:8200/health
 
 ---
 
 ## 🐳 Docker Images
 
-### Available Tags
-
 | Image Tag | Models | Size | Use Case |
 |-----------|--------|------|----------|
-| `v1.3.0-12models-16k-vaetiling-h264-memfix-bilingual` | All 12 | ~103GB | Full features |
-| `v1.3.0-3b-fast-4models-16k-vaetiling-h264-bilingual` | 4× 3B | ~26GB | Fast processing |
-| `v1.3.0-7b-quality-4models-16k-vaetiling-h264-bilingual` | 4× 7B | ~49GB | High quality |
-| `v1.3.0-7b-sharp-4models-16k-vaetiling-h264-bilingual` | 4× 7B Sharp | ~49GB | Detail enhancement |
-| `v1.3.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual` | 1× 7B Sharp FP16 | ~27GB | Minimal size |
+| `latest` / `v1.3.0-12models-*` | All 12 | ~103GB | Full features |
+| `v1.3.0-3b-fast-4models-*` | 4× 3B | ~26GB | Fast processing |
+| `v1.3.0-7b-quality-4models-*` | 4× 7B | ~49GB | High quality |
+| `v1.3.0-7b-sharp-4models-*` | 4× 7B Sharp | ~49GB | Detail enhancement |
+| `v1.3.0-7b-sharp-fp16-only-*` | 1× 7B Sharp FP16 | ~27GB | Minimal size |
 
 ---
 
-## 📦 Installation
+## 📚 API Documentation
 
-### Docker (Recommended)
+### Interactive API Docs
 
+Access Swagger UI at: **http://localhost:8200/apidocs**
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check |
+| `/api/gpu/status` | GET | GPU status (VRAM, model loaded) |
+| `/api/gpu/offload` | POST | Release GPU memory |
+| `/api/models` | GET | List available models |
+| `/api/models/switch` | POST | Load model to GPU |
+| `/api/process` | POST | Start processing task |
+| `/api/status/{task_id}` | GET | Get task progress |
+| `/api/download/{task_id}` | GET | Download result |
+
+### API Usage Examples
+
+#### 1. Check GPU Status
 ```bash
-docker run -d \
-  --name seedvr2 \
-  --gpus all \
-  -p 8200:8200 \
-  -v ./outputs:/app/outputs \
-  neosun/seedvr2-allinone:latest
+curl http://localhost:8200/api/gpu/status
+```
+Response:
+```json
+{
+  "cuda_available": true,
+  "gpu_name": "NVIDIA GeForce RTX 4090",
+  "vram_used_mb": 2048,
+  "vram_total_mb": 24564,
+  "model_loaded": true,
+  "current_model": "seedvr2_ema_7b_sharp_fp16.safetensors"
+}
 ```
 
-### Manual Installation
-
+#### 2. List Available Models
 ```bash
-git clone https://github.com/neosun100/seedvr2-docker-allinone.git
-cd seedvr2-docker-allinone
-pip install -r requirements.txt
-python server.py
+curl http://localhost:8200/api/models
 ```
+
+#### 3. Load a Model
+```bash
+curl -X POST http://localhost:8200/api/models/switch \
+  -H "Content-Type: application/json" \
+  -d '{"model": "seedvr2_ema_7b_sharp_fp16.safetensors"}'
+```
+
+#### 4. Process Image/Video
+```bash
+curl -X POST http://localhost:8200/api/process \
+  -F "file=@input.mp4" \
+  -F "resolution=1080" \
+  -F "batch_size=5" \
+  -F "dit_model=seedvr2_ema_7b_sharp_fp16.safetensors" \
+  -F "color_correction=lab" \
+  -F "seed=42" \
+  -F "vae_tiling=auto" \
+  -F "vae_quality=high"
+```
+Response:
+```json
+{"task_id": "abc12345", "status": "queued"}
+```
+
+#### 5. Check Task Status
+```bash
+curl http://localhost:8200/api/status/abc12345
+```
+Response:
+```json
+{
+  "id": "abc12345",
+  "status": "completed",
+  "progress": 100,
+  "output_path": "/app/outputs/result.mp4",
+  "output_resolution": "1920x1080",
+  "process_time": 45
+}
+```
+
+#### 6. Download Result
+```bash
+curl -O http://localhost:8200/api/download/abc12345
+```
+
+### Processing Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `file` | File | Required | Input image/video |
+| `resolution` | int | 1080 | Target short-edge resolution (480-16000) |
+| `batch_size` | int | 5 | Frames per batch (1,5,9,13,17,21,25) |
+| `dit_model` | string | auto | Model filename |
+| `color_correction` | string | lab | lab/wavelet/hsv/adain/none |
+| `seed` | int | 42 | Random seed |
+| `vae_tiling` | string | auto | auto/on/off |
+| `vae_quality` | string | high | low/medium/high |
 
 ---
 
-## 🎮 Usage
+## 🔧 MCP Interface
 
-1. Open **http://localhost:8200**
-2. Select AI model (3B/7B/7B-Sharp)
-3. Upload video/image
-4. Configure: Resolution, Batch Size, Color Correction, VAE Tiling
-5. Click "Start Processing"
-6. Download result
+For programmatic access via Model Context Protocol:
+
+```bash
+python mcp_server.py
+```
+
+### MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `upscale_image` | Upscale a single image |
+| `upscale_video` | Upscale a video file |
+| `get_gpu_status` | Get GPU status |
+| `release_gpu_memory` | Release GPU memory |
+| `list_available_models` | List available models |
+
+---
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | 8200 | Server port |
+| `NVIDIA_VISIBLE_DEVICES` | 0 | GPU device ID |
+| `GPU_IDLE_TIMEOUT` | 600 | Auto-unload after N seconds |
+| `MAX_UPLOAD_SIZE` | 500 | Max upload size (MB) |
+
+### VAE Tiling Settings
+
+| Preset | Tile Size | Overlap | VRAM | Quality |
+|--------|-----------|---------|------|---------|
+| Low VRAM | 512×512 | 64 | 8GB | Good |
+| Balanced | 768×768 | 96 | 16GB | Better |
+| High Quality | 1024×1024 | 128 | 24GB | Best |
 
 ---
 
@@ -116,11 +213,13 @@ python server.py
 - ✅ Ultra-high resolution: 10K/12K/16K support
 - ✅ Smart VAE auto-enable
 - ✅ 5 Docker images for different use cases
+- ✅ Complete API documentation with Swagger
 
 ### v1.2.x (2025-12-25)
 - ✅ VAE Tiling compatibility fix
 - ✅ Memory management optimization
 - ✅ H.264 encoding + audio preservation
+- ✅ Before/After comparison slider
 
 ---
 
