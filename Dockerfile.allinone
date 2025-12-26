@@ -1,0 +1,48 @@
+# SeedVR2 Video Upscaler - All-in-One Docker Image v1.4.0
+# Task Queue Edition - Serial GPU processing with multi-user support
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# 系统依赖
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip python3-venv \
+    ffmpeg libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender-dev \
+    curl && \
+    rm -rf /var/lib/apt/lists/* && \
+    ln -sf /usr/bin/python3 /usr/bin/python
+
+WORKDIR /app
+
+# Python 依赖
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124 && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir flask flask-cors flasgger gunicorn fastmcp werkzeug requests
+
+# 应用代码 (不含 models，单独 COPY)
+COPY src/ /app/src/
+COPY configs_3b/ /app/configs_3b/
+COPY configs_7b/ /app/configs_7b/
+COPY templates/ /app/templates/
+COPY *.py /app/
+COPY *.pt /app/
+COPY *.txt /app/
+COPY *.toml /app/
+
+# 模型文件 - 打包进镜像 (关键!)
+COPY models/ /app/models/
+
+# 创建目录并清理用户数据 (隐私保护)
+RUN mkdir -p /app/uploads /app/outputs && \
+    rm -rf /app/uploads/* /app/outputs/*
+
+EXPOSE 8200
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8200/health || exit 1
+
+CMD ["python", "server.py"]
