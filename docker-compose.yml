@@ -1,15 +1,17 @@
+# SeedVR2 Video Upscaler - Docker Compose
+# Privacy-safe deployment with host volume mounts
+
 services:
   seedvr2:
-    build: .
-    image: seedvr2-upscaler:latest
+    image: neosun/seedvr2-allinone:latest
     container_name: seedvr2-upscaler
     restart: unless-stopped
     ports:
       - "${PORT:-8200}:8200"
     volumes:
-      - ./models:/app/models
-      - ./uploads:/app/uploads
-      - ./outputs:/app/outputs
+      # Privacy-safe: files stored on host, not in container
+      - ${UPLOAD_DIR:-/tmp/seedvr2-docker-allinone/uploads}:/app/uploads
+      - ${OUTPUT_DIR:-/tmp/seedvr2-docker-allinone/outputs}:/app/outputs
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - GPU_IDLE_TIMEOUT=${GPU_IDLE_TIMEOUT:-600}
@@ -29,3 +31,25 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+
+# Alternative: Maximum privacy with tmpfs (memory storage)
+# Uncomment below and comment out the volumes section above
+#
+#  seedvr2-tmpfs:
+#    image: neosun/seedvr2-allinone:latest
+#    container_name: seedvr2-upscaler-tmpfs
+#    restart: unless-stopped
+#    ports:
+#      - "${PORT:-8200}:8200"
+#    tmpfs:
+#      - /app/uploads:size=10G
+#      - /app/outputs:size=50G
+#    environment:
+#      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: 1
+#              capabilities: [gpu]
