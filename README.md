@@ -7,7 +7,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/neosun/seedvr2-allinone?style=for-the-badge&logo=docker)](https://hub.docker.com/r/neosun/seedvr2-allinone)
 [![GitHub Stars](https://img.shields.io/github/stars/neosun100/seedvr2-docker-allinone?style=for-the-badge&logo=github)](https://github.com/neosun100/seedvr2-docker-allinone)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.3.2-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
+[![Version](https://img.shields.io/badge/Version-1.3.3-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
 
 **🚀 One-Click Deploy AI Video/Image Upscaler with Web UI**
 
@@ -62,7 +62,7 @@ docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:latest
 docker run -d --gpus all -p 8200:8200 \
   -v /tmp/seedvr2-docker-allinone/uploads:/app/uploads \
   -v /tmp/seedvr2-docker-allinone/outputs:/app/outputs \
-  neosun/seedvr2-allinone:v1.3.2-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual
+  neosun/seedvr2-allinone:v1.3.3-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual
 ```
 
 Then open:
@@ -111,11 +111,11 @@ docker run -d --gpus all -p 8200:8200 \
 
 | Image Tag | Models | Size | Use Case |
 |-----------|--------|------|----------|
-| `latest` / `v1.3.2-12models-*` | All 12 | ~103GB | Full features |
-| `v1.3.2-3b-fast-4models-*` | 4× 3B | ~26GB | Fast processing |
-| `v1.3.2-7b-quality-4models-*` | 4× 7B | ~49GB | High quality |
-| `v1.3.2-7b-sharp-4models-*` | 4× 7B Sharp | ~49GB | Detail enhancement |
-| `v1.3.2-7b-sharp-fp16-only-*` | 1× 7B Sharp FP16 | ~27GB | Minimal size |
+| `latest` / `v1.3.3-12models-*` | All 12 | ~103GB | Full features |
+| `v1.3.3-3b-fast-4models-*` | 4× 3B | ~26GB | Fast processing |
+| `v1.3.3-7b-quality-4models-*` | 4× 7B | ~49GB | High quality |
+| `v1.3.3-7b-sharp-4models-*` | 4× 7B Sharp | ~49GB | Detail enhancement |
+| `v1.3.3-7b-sharp-fp16-only-*` | 1× 7B Sharp FP16 | ~27GB | Minimal size |
 
 ---
 
@@ -144,80 +144,24 @@ Access Swagger UI at: **http://localhost:8200/apidocs**
 ```bash
 curl http://localhost:8200/api/gpu/status
 ```
-Response:
-```json
-{
-  "cuda_available": true,
-  "gpu_name": "NVIDIA GeForce RTX 4090",
-  "vram_used_mb": 2048,
-  "vram_total_mb": 24564,
-  "model_loaded": true,
-  "current_model": "seedvr2_ema_7b_sharp_fp16.safetensors"
-}
-```
 
-#### 2. List Available Models
-```bash
-curl http://localhost:8200/api/models
-```
-
-#### 3. Load a Model
-```bash
-curl -X POST http://localhost:8200/api/models/switch \
-  -H "Content-Type: application/json" \
-  -d '{"model": "seedvr2_ema_7b_sharp_fp16.safetensors"}'
-```
-
-#### 4. Process Image/Video
+#### 2. Process Image/Video
 ```bash
 curl -X POST http://localhost:8200/api/process \
   -F "file=@input.mp4" \
   -F "resolution=1080" \
-  -F "batch_size=5" \
-  -F "dit_model=seedvr2_ema_7b_sharp_fp16.safetensors" \
-  -F "color_correction=lab" \
-  -F "seed=42" \
-  -F "vae_tiling=auto" \
-  -F "vae_quality=high"
-```
-Response:
-```json
-{"task_id": "abc12345", "status": "queued"}
+  -F "batch_size=5"
 ```
 
-#### 5. Check Task Status
+#### 3. Check Task Status
 ```bash
-curl http://localhost:8200/api/status/abc12345
-```
-Response:
-```json
-{
-  "id": "abc12345",
-  "status": "completed",
-  "progress": 100,
-  "output_path": "/app/outputs/result.mp4",
-  "output_resolution": "1920x1080",
-  "process_time": 45
-}
+curl http://localhost:8200/api/status/{task_id}
 ```
 
-#### 6. Download Result
+#### 4. Download Result
 ```bash
-curl -O http://localhost:8200/api/download/abc12345
+curl -O http://localhost:8200/api/download/{task_id}
 ```
-
-### Processing Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `file` | File | Required | Input image/video |
-| `resolution` | int | 1080 | Target short-edge resolution (480-16000) |
-| `batch_size` | int | 5 | Frames per batch (1,5,9,13,17,21,25) |
-| `dit_model` | string | auto | Model filename |
-| `color_correction` | string | lab | lab/wavelet/hsv/adain/none |
-| `seed` | int | 42 | Random seed |
-| `vae_tiling` | string | auto | auto/on/off |
-| `vae_quality` | string | high | low/medium/high |
 
 ---
 
@@ -237,8 +181,6 @@ MCP (Model Context Protocol) allows AI assistants like Claude Desktop, Cursor, o
 
 ### Register MCP Server in Claude Desktop
 
-Add the following to your Claude Desktop configuration file:
-
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
@@ -247,97 +189,26 @@ Add the following to your Claude Desktop configuration file:
   "mcpServers": {
     "seedvr2-upscaler": {
       "command": "docker",
-      "args": [
-        "exec", "-i", "seedvr2-upscaler",
-        "python", "/app/mcp_server.py"
-      ]
+      "args": ["exec", "-i", "seedvr2-upscaler", "python", "/app/mcp_server.py"]
     }
   }
 }
 ```
 
-> **Note**: Make sure the container `seedvr2-upscaler` is running before starting Claude Desktop.
-
 ### Register MCP Server in Cursor
 
-Add to your Cursor MCP settings (`.cursor/mcp.json`):
+Add to `.cursor/mcp.json`:
 
 ```json
 {
   "mcpServers": {
     "seedvr2-upscaler": {
       "command": "docker",
-      "args": [
-        "exec", "-i", "seedvr2-upscaler",
-        "python", "/app/mcp_server.py"
-      ]
+      "args": ["exec", "-i", "seedvr2-upscaler", "python", "/app/mcp_server.py"]
     }
   }
 }
 ```
-
-### Standalone MCP Server (Without Docker)
-
-If running locally without Docker:
-
-```bash
-# Clone and setup
-git clone https://github.com/neosun100/seedvr2-docker-allinone.git
-cd seedvr2-docker-allinone
-pip install -r requirements.txt
-
-# Run MCP server
-python mcp_server.py
-```
-
-Configuration for local MCP server:
-
-```json
-{
-  "mcpServers": {
-    "seedvr2-upscaler": {
-      "command": "python",
-      "args": ["/path/to/seedvr2-docker-allinone/mcp_server.py"]
-    }
-  }
-}
-```
-
-### MCP Tool Usage Examples
-
-Once registered, you can ask Claude/Cursor to:
-
-- "Upscale this image to 4K resolution"
-- "Check GPU status"
-- "List available upscaling models"
-- "Upscale video.mp4 to 1080p using the 7B Sharp model"
-- "Release GPU memory"
-
-### MCP Tool Parameters
-
-#### upscale_image
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `file_path` | string | Required | Path to input image |
-| `resolution` | int | 1080 | Target resolution |
-| `dit_model` | string | 3B FP8 | Model to use |
-| `color_correction` | string | lab | Color correction method |
-| `seed` | int | 42 | Random seed |
-| `blocks_to_swap` | int | 0 | VRAM optimization (0-32) |
-
-#### upscale_video
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `file_path` | string | Required | Path to input video |
-| `resolution` | int | 1080 | Target resolution |
-| `batch_size` | int | 5 | Frames per batch (4n+1) |
-| `dit_model` | string | 3B FP8 | Model to use |
-| `color_correction` | string | lab | Color correction method |
-| `seed` | int | 42 | Random seed |
-| `blocks_to_swap` | int | 0 | VRAM optimization |
-| `temporal_overlap` | int | 0 | Overlap frames for smooth transitions |
 
 ---
 
@@ -352,42 +223,27 @@ Once registered, you can ask Claude/Cursor to:
 | `GPU_IDLE_TIMEOUT` | 600 | Auto-unload after N seconds |
 | `MAX_UPLOAD_SIZE` | 500 | Max upload size (MB) |
 
-### VAE Tiling Settings
-
-| Preset | Tile Size | Overlap | VRAM | Quality |
-|--------|-----------|---------|------|---------|
-| Low VRAM | 512×512 | 64 | 8GB | Good |
-| Balanced | 768×768 | 96 | 16GB | Better |
-| High Quality | 1024×1024 | 128 | 24GB | Best |
-
 ---
 
 ## 📊 Changelog
 
+### v1.3.3 (2025-12-26)
+- 🎨 Added project footer in Web UI with GitHub/Docker Hub links
+- ⭐ Easy access to Star, Issue reporting, and Docker Hub
+
 ### v1.3.2 (2025-12-26)
 - 🔒 **Privacy Fix**: Removed all user files from Docker images
 - 📁 Added volume mount documentation for privacy-safe deployment
-- 📁 Added tmpfs option for maximum privacy (memory storage)
 - 📖 Added complete MCP documentation with client registration examples
-- 🧹 Clean `/app/uploads` and `/app/outputs` directories in all images
 
 ### v1.3.1 (2025-12-26)
 - 🐛 Fixed MCP BFloat16 conversion error in upscale_image/upscale_video
 - ✅ All 5 MCP tools fully tested and working
-- ✅ All 9 REST API endpoints verified
 
 ### v1.3.0 (2025-12-26)
 - ✅ VAE Quality presets (Low/Balanced/High)
 - ✅ Ultra-high resolution: 10K/12K/16K support
-- ✅ Smart VAE auto-enable
 - ✅ 5 Docker images for different use cases
-- ✅ Complete API documentation with Swagger
-
-### v1.2.x (2025-12-25)
-- ✅ VAE Tiling compatibility fix
-- ✅ Memory management optimization
-- ✅ H.264 encoding + audio preservation
-- ✅ Before/After comparison slider
 
 ---
 
@@ -400,5 +256,7 @@ Apache License 2.0 - Based on [SeedVR2](https://github.com/ByteDance-Seed/SeedVR
 <div align="center">
 
 **Made with ❤️ by [NeoSun](https://github.com/neosun100)**
+
+⭐ If you find this project helpful, please give it a star!
 
 </div>
