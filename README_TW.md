@@ -33,26 +33,16 @@
 
 ---
 
-## 🎯 效果展示
-
-| 原圖 | 超分後 (2160p) |
-|:----:|:--------------:|
-| ![原圖](https://img.aws.xin/uPic/liu.jpeg) | ![超分後](https://img.aws.xin/uPic/liu_7b_sharp_fp16_2160p_b5_clab_s42_22s.png) |
-
-![處理前後對比](https://img.aws.xin/uPic/ZZ3Nwy.png)
-
----
-
 ## 🚀 快速開始
 
 ```bash
 # 建立目錄
-mkdir -p /tmp/seedvr2-docker-allinone/uploads /tmp/seedvr2-docker-allinone/outputs
+mkdir -p /tmp/seedvr2/uploads /tmp/seedvr2/outputs
 
 # 啟動容器
 docker run -d --gpus all -p 8200:8200 \
-  -v /tmp/seedvr2-docker-allinone/uploads:/app/uploads \
-  -v /tmp/seedvr2-docker-allinone/outputs:/app/outputs \
+  -v /tmp/seedvr2/uploads:/app/uploads \
+  -v /tmp/seedvr2/outputs:/app/outputs \
   neosun/seedvr2-allinone:latest
 ```
 
@@ -65,10 +55,11 @@ docker run -d --gpus all -p 8200:8200 \
 | 映像檔標籤 | 包含模型 | 大小 | 適用場景 |
 |------------|----------|------|----------|
 | `latest` / `v1.4.0` | 全部 12 個 | ~103GB | 完整功能 + 任務佇列 |
-| `v1.3.2-3b-fast-4models-*` | 4× 3B | ~26GB | 快速處理 |
-| `v1.3.2-7b-quality-4models-*` | 4× 7B | ~49GB | 高品質 |
-| `v1.3.2-7b-sharp-4models-*` | 4× 7B Sharp | ~49GB | 細節增強 |
-| `v1.3.2-7b-sharp-fp16-only-*` | 1× 7B Sharp FP16 | ~27GB | 最小體積 |
+| `v1.4.0-12models-16k-vaetiling-h264-bilingual` | 全部 12 個 | ~103GB | 完整功能 |
+| `v1.4.0-3b-fast-4models-16k-vaetiling-h264-bilingual` | 4× 3B | ~26GB | 快速處理 |
+| `v1.4.0-7b-quality-4models-16k-vaetiling-h264-bilingual` | 4× 7B | ~49GB | 高品質 |
+| `v1.4.0-7b-sharp-4models-16k-vaetiling-h264-bilingual` | 4× 7B Sharp | ~49GB | 細節增強 |
+| `v1.4.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual` | 1× 7B Sharp FP16 | ~27GB | 最小體積 |
 
 > ⚠️ **建議使用最新版本**以獲得最佳體驗和安全性。
 
@@ -89,21 +80,6 @@ docker run -d --gpus all -p 8200:8200 \
 | `/api/queue/status` | GET | 佇列概覽（處理中、等待中、已完成數量）|
 | `/api/queue/position/{task_id}` | GET | 任務位置和預估等待時間 |
 | `/api/queue/history` | GET | 已完成任務歷史 |
-
-### 使用範例
-
-```bash
-# 查詢佇列狀態
-curl http://localhost:8200/api/queue/status
-
-# 回應範例
-{
-  "processing": "task-123",
-  "waiting": 3,
-  "completed": 15,
-  "avg_process_time": 45.2
-}
-```
 
 ---
 
@@ -140,26 +116,19 @@ curl http://localhost:8200/api/queue/status
 - ✅ **佇列歷史** - 追蹤已完成/失敗任務
 - ✅ **UI 佇列面板** - 即時佇列狀態顯示
 
-#### 新增 API 端點
-- `GET /api/queue/status` - 佇列概覽
-- `GET /api/queue/position/{task_id}` - 任務位置和預估等待
-- `GET /api/queue/history` - 已完成任務歷史
+### v1.3.3 - UI 增強（2025-12-26）
+- ✅ **專案頁腳** - Web UI 新增 GitHub/Docker Hub 連結
+- ✅ 改進 UI 佈局和品牌展示
 
-#### MCP 增強
-- `get_queue_status()` - 佇列狀態
-- `submit_image_task()` / `submit_video_task()` - 提交到佇列
-- `get_task_position()` - 查詢佇列位置
-- `wait_for_task()` - 阻塞等待完成
+### v1.3.2 - 隱私與安全（2025-12-26）
+- 🔒 **隱私修復** - 從 Docker 映像檔中移除所有用戶檔案
+- 📁 **卷掛載** - 推薦使用宿主機目錄掛載部署
+- 📖 **MCP 文件** - 完整的客戶端註冊範例
 
-### v1.3.2
-- 🔒 安全性優化
-- 📁 支援宿主機目錄掛載
-- 📖 完善 MCP 文件
+### v1.3.1 - MCP 修復（2025-12-26）
+- 🐛 **BFloat16 修復** - 修復 MCP 中 "Got unsupported ScalarType BFloat16" 錯誤
 
-### v1.3.1
-- 🐛 修復 MCP BFloat16 轉換問題
-
-### v1.3.0
+### v1.3.0 - 一體化發布版（2025-12-26）
 - ✅ VAE 品質預設
 - ✅ 16K 超高解析度支援
 
