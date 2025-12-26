@@ -7,7 +7,8 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/neosun/seedvr2-allinone?style=for-the-badge&logo=docker)](https://hub.docker.com/r/neosun/seedvr2-allinone)
 [![GitHub Stars](https://img.shields.io/github/stars/neosun100/seedvr2-docker-allinone?style=for-the-badge&logo=github)](https://github.com/neosun100/seedvr2-docker-allinone)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.4.1-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
+[![Version](https://img.shields.io/badge/Version-1.4.2-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
+[![Stable](https://img.shields.io/badge/Stable-1.3.3-blue?style=for-the-badge)](https://hub.docker.com/r/neosun/seedvr2-allinone/tags)
 
 **🚀 One-Click Deploy AI Video/Image Upscaler with Web UI**
 
@@ -101,18 +102,35 @@ Full API documentation is available:
 
 ## 📊 Changelog
 
-### v1.4.1 - Bug Fix Release (2025-12-27)
+### v1.4.2 - Stability Release (2025-12-27)
 #### 🐛 Bug Fixes
+- ✅ **Fixed numpy import error** - Added missing `import numpy as np` that caused "name 'np' is not defined" error during video processing
 - ✅ **Fixed model state tracking** - Model status now persists correctly across UI interactions
 - ✅ **Fixed `/api/models` response** - Added `current`, `loading`, `loading_model` fields
 - ✅ **Fixed `/api/models/switch`** - Now properly sets model state in GPUManager
 - ✅ **Fixed startProcess override bug** - Removed broken empty function override
 - ✅ **Fixed UI model display** - "✓ 已加载" indicator now shows correctly
 
+#### Docker Tags
+- `latest` → v1.4.2 (newest features + task queue)
+- `stable` → v1.3.3 (proven stable, no task queue)
+
+#### All v1.4.2 Variants Tested ✅
+| Variant | Models | Queue | Processing Test |
+|---------|--------|-------|-----------------|
+| `v1.4.2` (12models) | 12 | ✅ | ✅ 5s |
+| `v1.4.2-3b-fast-4models-...` | 4 | ✅ | ✅ 6s |
+| `v1.4.2-7b-quality-4models-...` | 4 | ✅ | ✅ 15s |
+| `v1.4.2-7b-sharp-4models-...` | 4 | ✅ | ✅ 16s |
+| `v1.4.2-7b-sharp-fp16-only-...` | 1 | ✅ | ✅ 20s |
+
 #### API Improvements
 - `/api/gpu/status` now returns complete model state
 - `/api/models` returns current loaded model info
 - Full API documentation added (API.md, API_CN.md)
+
+### v1.4.1 - Bug Fix Release (2025-12-27)
+- 🐛 Intermediate fix release (superseded by v1.4.2)
 
 ### v1.4.0 - Task Queue Edition (2025-12-26)
 #### 🔄 Task Queue System
