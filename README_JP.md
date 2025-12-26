@@ -33,26 +33,16 @@
 
 ---
 
-## 🎯 効果デモ
-
-| 元画像 | アップスケール後 (2160p) |
-|:------:|:------------------------:|
-| ![元画像](https://img.aws.xin/uPic/liu.jpeg) | ![アップスケール後](https://img.aws.xin/uPic/liu_7b_sharp_fp16_2160p_b5_clab_s42_22s.png) |
-
-![処理前後の比較](https://img.aws.xin/uPic/ZZ3Nwy.png)
-
----
-
 ## 🚀 クイックスタート
 
 ```bash
 # ディレクトリ作成
-mkdir -p /tmp/seedvr2-docker-allinone/uploads /tmp/seedvr2-docker-allinone/outputs
+mkdir -p /tmp/seedvr2/uploads /tmp/seedvr2/outputs
 
 # コンテナ起動
 docker run -d --gpus all -p 8200:8200 \
-  -v /tmp/seedvr2-docker-allinone/uploads:/app/uploads \
-  -v /tmp/seedvr2-docker-allinone/outputs:/app/outputs \
+  -v /tmp/seedvr2/uploads:/app/uploads \
+  -v /tmp/seedvr2/outputs:/app/outputs \
   neosun/seedvr2-allinone:latest
 ```
 
@@ -65,10 +55,11 @@ docker run -d --gpus all -p 8200:8200 \
 | イメージタグ | モデル | サイズ | 用途 |
 |--------------|--------|--------|------|
 | `latest` / `v1.4.0` | 全12個 | ~103GB | フル機能 + タスクキュー |
-| `v1.3.2-3b-fast-4models-*` | 4× 3B | ~26GB | 高速処理 |
-| `v1.3.2-7b-quality-4models-*` | 4× 7B | ~49GB | 高品質 |
-| `v1.3.2-7b-sharp-4models-*` | 4× 7B Sharp | ~49GB | ディテール強化 |
-| `v1.3.2-7b-sharp-fp16-only-*` | 1× 7B Sharp FP16 | ~27GB | 最小サイズ |
+| `v1.4.0-12models-16k-vaetiling-h264-bilingual` | 全12個 | ~103GB | フル機能 |
+| `v1.4.0-3b-fast-4models-16k-vaetiling-h264-bilingual` | 4× 3B | ~26GB | 高速処理 |
+| `v1.4.0-7b-quality-4models-16k-vaetiling-h264-bilingual` | 4× 7B | ~49GB | 高品質 |
+| `v1.4.0-7b-sharp-4models-16k-vaetiling-h264-bilingual` | 4× 7B Sharp | ~49GB | ディテール強化 |
+| `v1.4.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual` | 1× 7B Sharp FP16 | ~27GB | 最小サイズ |
 
 > ⚠️ 最高の体験とセキュリティのため、**最新バージョンの使用を推奨**します。
 
@@ -89,21 +80,6 @@ docker run -d --gpus all -p 8200:8200 \
 | `/api/queue/status` | GET | キュー概要（処理中、待機中、完了数）|
 | `/api/queue/position/{task_id}` | GET | タスク位置と推定待ち時間 |
 | `/api/queue/history` | GET | 完了タスク履歴 |
-
-### 使用例
-
-```bash
-# キューステータス確認
-curl http://localhost:8200/api/queue/status
-
-# レスポンス例
-{
-  "processing": "task-123",
-  "waiting": 3,
-  "completed": 15,
-  "avg_process_time": 45.2
-}
-```
 
 ---
 
@@ -140,28 +116,21 @@ Claude Desktop、Cursor などの MCP クライアントから直接呼び出し
 - ✅ **キュー履歴** - 完了/失敗タスクの追跡
 - ✅ **UIキューパネル** - リアルタイムキューステータス表示
 
-#### 新規 API エンドポイント
-- `GET /api/queue/status` - キュー概要
-- `GET /api/queue/position/{task_id}` - タスク位置と推定待ち時間
-- `GET /api/queue/history` - 完了タスク履歴
+### v1.3.3 - UI強化（2025-12-26）
+- ✅ **プロジェクトフッター** - Web UIにGitHub/Docker Hubリンクを追加
+- ✅ UIレイアウトとブランディングの改善
 
-#### MCP 強化
-- `get_queue_status()` - キューステータス
-- `submit_image_task()` / `submit_video_task()` - キューに送信
-- `get_task_position()` - キュー位置確認
-- `wait_for_task()` - 完了までブロッキング待機
+### v1.3.2 - プライバシーとセキュリティ（2025-12-26）
+- 🔒 **プライバシー修正** - Dockerイメージからすべてのユーザーファイルを削除
+- 📁 **ボリュームマウント** - ホストディレクトリマウントでのデプロイを推奨
+- 📖 **MCPドキュメント** - 完全なクライアント登録例
 
-### v1.3.2
-- 🔒 セキュリティ最適化
-- 📁 ホストディレクトリマウント対応
-- 📖 MCP ドキュメント完備
+### v1.3.1 - MCP修正（2025-12-26）
+- 🐛 **BFloat16修正** - MCPの"Got unsupported ScalarType BFloat16"エラーを修正
 
-### v1.3.1
-- 🐛 MCP BFloat16 変換問題を修正
-
-### v1.3.0
-- ✅ VAE 品質プリセット
-- ✅ 16K 超高解像度サポート
+### v1.3.0 - オールインワンリリース（2025-12-26）
+- ✅ VAE品質プリセット
+- ✅ 16K超高解像度サポート
 
 ---
 
