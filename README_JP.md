@@ -7,7 +7,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/neosun/seedvr2-allinone?style=for-the-badge&logo=docker)](https://hub.docker.com/r/neosun/seedvr2-allinone)
 [![GitHub Stars](https://img.shields.io/github/stars/neosun100/seedvr2-docker-allinone?style=for-the-badge&logo=github)](https://github.com/neosun100/seedvr2-docker-allinone)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.3.2-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
+[![Version](https://img.shields.io/badge/Version-1.4.0-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
 
 **🚀 ワンクリックでAI動画/画像アップスケーラーをデプロイ**
 
@@ -24,6 +24,7 @@
 | 機能 | 説明 |
 |------|------|
 | **12 AI モデル** | 3B/7B/7B-Sharp × FP16/FP8/GGUF |
+| **🔄 タスクキュー** | シリアルGPU処理、マルチユーザー対応（v1.4.0 新機能）|
 | **3つのインターフェース** | Web UI + REST API + MCP |
 | **解像度サポート** | 480p → 16K |
 | **VAE Tiling** | 高解像度処理、スマート自動有効化 |
@@ -63,13 +64,46 @@ docker run -d --gpus all -p 8200:8200 \
 
 | イメージタグ | モデル | サイズ | 用途 |
 |--------------|--------|--------|------|
-| `latest` / `v1.3.2-12models-*` | 全12個 | ~103GB | フル機能 |
+| `latest` / `v1.4.0` | 全12個 | ~103GB | フル機能 + タスクキュー |
 | `v1.3.2-3b-fast-4models-*` | 4× 3B | ~26GB | 高速処理 |
 | `v1.3.2-7b-quality-4models-*` | 4× 7B | ~49GB | 高品質 |
 | `v1.3.2-7b-sharp-4models-*` | 4× 7B Sharp | ~49GB | ディテール強化 |
 | `v1.3.2-7b-sharp-fp16-only-*` | 1× 7B Sharp FP16 | ~27GB | 最小サイズ |
 
 > ⚠️ 最高の体験とセキュリティのため、**最新バージョンの使用を推奨**します。
+
+---
+
+## 🔄 タスクキューシステム（v1.4.0 新機能）
+
+### コア機能
+- **シリアルGPU処理**：タスクを1つずつ実行、CUDA OOMを回避
+- **マルチユーザー対応**：100人以上が同時にタスク送信可能
+- **リアルタイムステータス**：キュー長、位置、推定待ち時間
+- **履歴記録**：完了/失敗タスクの追跡
+
+### キュー API
+
+| エンドポイント | メソッド | 説明 |
+|----------------|----------|------|
+| `/api/queue/status` | GET | キュー概要（処理中、待機中、完了数）|
+| `/api/queue/position/{task_id}` | GET | タスク位置と推定待ち時間 |
+| `/api/queue/history` | GET | 完了タスク履歴 |
+
+### 使用例
+
+```bash
+# キューステータス確認
+curl http://localhost:8200/api/queue/status
+
+# レスポンス例
+{
+  "processing": "task-123",
+  "waiting": 3,
+  "completed": 15,
+  "avg_process_time": 45.2
+}
+```
 
 ---
 
@@ -88,11 +122,36 @@ Claude Desktop、Cursor などの MCP クライアントから直接呼び出し
 }
 ```
 
+### MCP キュー機能（v1.4.0）
+- `get_queue_status()` - キューステータス取得
+- `submit_image_task()` / `submit_video_task()` - キューにタスク送信
+- `get_task_position()` - キュー位置確認
+- `wait_for_task()` - タスク完了までブロッキング待機
+
 ---
 
 ## 📊 更新履歴
 
-### v1.3.2（最新）
+### v1.4.0 - タスクキュー版（2025-12-26）
+#### 🔄 タスクキューシステム
+- ✅ **シリアルGPU処理** - タスクを1つずつ実行、CUDA OOMなし
+- ✅ **マルチユーザー対応** - 100人以上が同時送信可能
+- ✅ **キューステータスAPI** - リアルタイムキュー長、位置、推定時間
+- ✅ **キュー履歴** - 完了/失敗タスクの追跡
+- ✅ **UIキューパネル** - リアルタイムキューステータス表示
+
+#### 新規 API エンドポイント
+- `GET /api/queue/status` - キュー概要
+- `GET /api/queue/position/{task_id}` - タスク位置と推定待ち時間
+- `GET /api/queue/history` - 完了タスク履歴
+
+#### MCP 強化
+- `get_queue_status()` - キューステータス
+- `submit_image_task()` / `submit_video_task()` - キューに送信
+- `get_task_position()` - キュー位置確認
+- `wait_for_task()` - 完了までブロッキング待機
+
+### v1.3.2
 - 🔒 セキュリティ最適化
 - 📁 ホストディレクトリマウント対応
 - 📖 MCP ドキュメント完備
