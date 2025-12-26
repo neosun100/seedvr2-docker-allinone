@@ -13,7 +13,7 @@
 
 *Based on [ByteDance SeedVR2](https://github.com/ByteDance-Seed/SeedVR) | Enhanced Docker All-in-One Edition*
 
-[Quick Start](#-quick-start) • [Features](#-features) • [API Docs](#-api-documentation) • [Docker Images](#-docker-images)
+[Quick Start](#-quick-start) • [Features](#-features) • [API Docs](#-api-documentation) • [MCP Interface](#-mcp-interface) • [Docker Images](#-docker-images)
 
 <img src="https://img.aws.xin/uPic/IaHGPU.png" alt="Web UI Screenshot">
 
@@ -223,21 +223,121 @@ curl -O http://localhost:8200/api/download/abc12345
 
 ## 🔧 MCP Interface
 
-For programmatic access via Model Context Protocol:
-
-```bash
-python mcp_server.py
-```
+MCP (Model Context Protocol) allows AI assistants like Claude Desktop, Cursor, or other MCP-compatible clients to directly use SeedVR2 upscaling capabilities.
 
 ### MCP Tools
 
 | Tool | Description |
 |------|-------------|
-| `upscale_image` | Upscale a single image |
-| `upscale_video` | Upscale a video file |
-| `get_gpu_status` | Get GPU status |
-| `release_gpu_memory` | Release GPU memory |
-| `list_available_models` | List available models |
+| `upscale_image` | Upscale a single image (synchronous) |
+| `upscale_video` | Upscale a video file (synchronous) |
+| `get_gpu_status` | Get GPU status and VRAM usage |
+| `release_gpu_memory` | Release GPU memory by unloading models |
+| `list_available_models` | List available DiT models |
+
+### Register MCP Server in Claude Desktop
+
+Add the following to your Claude Desktop configuration file:
+
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "seedvr2-upscaler": {
+      "command": "docker",
+      "args": [
+        "exec", "-i", "seedvr2-upscaler",
+        "python", "/app/mcp_server.py"
+      ]
+    }
+  }
+}
+```
+
+> **Note**: Make sure the container `seedvr2-upscaler` is running before starting Claude Desktop.
+
+### Register MCP Server in Cursor
+
+Add to your Cursor MCP settings (`.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "seedvr2-upscaler": {
+      "command": "docker",
+      "args": [
+        "exec", "-i", "seedvr2-upscaler",
+        "python", "/app/mcp_server.py"
+      ]
+    }
+  }
+}
+```
+
+### Standalone MCP Server (Without Docker)
+
+If running locally without Docker:
+
+```bash
+# Clone and setup
+git clone https://github.com/neosun100/seedvr2-docker-allinone.git
+cd seedvr2-docker-allinone
+pip install -r requirements.txt
+
+# Run MCP server
+python mcp_server.py
+```
+
+Configuration for local MCP server:
+
+```json
+{
+  "mcpServers": {
+    "seedvr2-upscaler": {
+      "command": "python",
+      "args": ["/path/to/seedvr2-docker-allinone/mcp_server.py"]
+    }
+  }
+}
+```
+
+### MCP Tool Usage Examples
+
+Once registered, you can ask Claude/Cursor to:
+
+- "Upscale this image to 4K resolution"
+- "Check GPU status"
+- "List available upscaling models"
+- "Upscale video.mp4 to 1080p using the 7B Sharp model"
+- "Release GPU memory"
+
+### MCP Tool Parameters
+
+#### upscale_image
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `file_path` | string | Required | Path to input image |
+| `resolution` | int | 1080 | Target resolution |
+| `dit_model` | string | 3B FP8 | Model to use |
+| `color_correction` | string | lab | Color correction method |
+| `seed` | int | 42 | Random seed |
+| `blocks_to_swap` | int | 0 | VRAM optimization (0-32) |
+
+#### upscale_video
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `file_path` | string | Required | Path to input video |
+| `resolution` | int | 1080 | Target resolution |
+| `batch_size` | int | 5 | Frames per batch (4n+1) |
+| `dit_model` | string | 3B FP8 | Model to use |
+| `color_correction` | string | lab | Color correction method |
+| `seed` | int | 42 | Random seed |
+| `blocks_to_swap` | int | 0 | VRAM optimization |
+| `temporal_overlap` | int | 0 | Overlap frames for smooth transitions |
 
 ---
 
@@ -268,6 +368,7 @@ python mcp_server.py
 - 🔒 **Privacy Fix**: Removed all user files from Docker images
 - 📁 Added volume mount documentation for privacy-safe deployment
 - 📁 Added tmpfs option for maximum privacy (memory storage)
+- 📖 Added complete MCP documentation with client registration examples
 - 🧹 Clean `/app/uploads` and `/app/outputs` directories in all images
 
 ### v1.3.1 (2025-12-26)
