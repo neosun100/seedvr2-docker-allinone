@@ -129,18 +129,17 @@ Full API documentation is available:
 🎉 **Major version bump** - Consolidates all v1.4.x improvements into a stable, optimized release.
 
 #### ⚡ Performance Optimizations
-- ✅ **cuDNN Optimizations** - `cudnn.benchmark=True`, `allow_tf32=True`, `matmul.allow_tf32=True`
-- ✅ **TF32 Precision** - Faster matrix operations on Ampere+ GPUs
+- ✅ **TF32 Precision** - `allow_tf32=True`, `matmul.allow_tf32=True` for Ampere+ GPUs
+- ⚠️ **cudnn.benchmark disabled** - Causes slowdown with VAE tiling (37% slower)
 
-#### 📊 v1.4.2 vs v1.5.0 Benchmark (L40S GPU)
+#### 📊 v1.4.2 vs v1.5.0 Benchmark (L40S GPU, 1080→8K)
 
-| Test Case | v1.4.2 | v1.5.0 | Note |
-|-----------|--------|--------|------|
-| 512→1080p (3B FP8) | 5s | 5s | Same |
-| 1080→4K (3B FP8) | 9s | 10s | Similar |
-| 1080→4K (7B Sharp) | 24s | 24s | Same |
+| Config | VAE Encode | DiT | VAE Decode | Total |
+|--------|------------|-----|------------|-------|
+| v1.4.2 (baseline) | 5s | 11s | 11s | **27s** |
+| v1.5.0 (TF32 only) | 5s | 11s | 11s | **27s** |
 
-> **Note**: cuDNN optimizations primarily benefit DiT inference phase. Overall speedup varies by workload. First run may be slower due to cuDNN algorithm search (benchmark mode).
+> **Note**: `cudnn.benchmark=True` was removed as it causes 37% slowdown with VAE tiling due to algorithm search overhead on varying tile sizes.
 
 #### 🔄 Task Queue System (from v1.4.0)
 - ✅ Serial GPU processing - no CUDA OOM

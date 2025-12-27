@@ -21,7 +21,7 @@ if script_dir not in sys.path:
 
 # cuDNN optimizations for ~14% performance boost
 import torch
-torch.backends.cudnn.benchmark = True
+torch.backends.cudnn.benchmark = False  # Disabled - causes slowdown with VAE tiling
 torch.backends.cudnn.allow_tf32 = True
 torch.backends.cuda.matmul.allow_tf32 = True
 
