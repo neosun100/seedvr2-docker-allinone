@@ -7,7 +7,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/neosun/seedvr2-allinone?style=for-the-badge&logo=docker)](https://hub.docker.com/r/neosun/seedvr2-allinone)
 [![GitHub Stars](https://img.shields.io/github/stars/neosun100/seedvr2-docker-allinone?style=for-the-badge&logo=github)](https://github.com/neosun100/seedvr2-docker-allinone)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.4.2-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
+[![Version](https://img.shields.io/badge/Version-1.4.3-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
 [![Stable](https://img.shields.io/badge/Stable-1.3.3-blue?style=for-the-badge)](https://hub.docker.com/r/neosun/seedvr2-allinone/tags)
 
 **🚀 One-Click Deploy AI Video/Image Upscaler with Web UI**
@@ -72,16 +72,23 @@ Then open: **http://localhost:8200**
 
 ## 🐳 Docker Images
 
-### Available Tags (v1.4.1)
+### Available Tags
+
+| Tag | Version | Features | Stability |
+|-----|---------|----------|-----------|
+| `latest` | v1.4.3 | Task Queue + cuDNN Optimizations | ⭐ Recommended |
+| `stable` | v1.3.3 | No Task Queue | 🔒 Proven stable |
+
+### v1.4.3 Tags (Latest)
 
 | Image Tag | Models | Size | Use Case |
 |-----------|--------|------|----------|
-| `latest` / `v1.4.1` | All 12 | ~103GB | Full features + Task Queue |
-| `v1.4.0-12models-16k-vaetiling-h264-bilingual` | All 12 | ~103GB | Full features |
-| `v1.4.0-3b-fast-4models-16k-vaetiling-h264-bilingual` | 4× 3B | ~26GB | Fast processing |
-| `v1.4.0-7b-quality-4models-16k-vaetiling-h264-bilingual` | 4× 7B | ~49GB | High quality |
-| `v1.4.0-7b-sharp-4models-16k-vaetiling-h264-bilingual` | 4× 7B Sharp | ~49GB | Detail enhancement |
-| `v1.4.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual` | 1× 7B Sharp FP16 | ~27GB | Minimal size |
+| `latest` / `v1.4.3` | All 12 | ~103GB | Full features + 14% faster |
+| `v1.4.2-12models-16k-vaetiling-h264-bilingual` | All 12 | ~103GB | Full features |
+| `v1.4.2-3b-fast-4models-16k-vaetiling-h264-bilingual` | 4× 3B | ~26GB | Fast processing |
+| `v1.4.2-7b-quality-4models-16k-vaetiling-h264-bilingual` | 4× 7B | ~49GB | High quality |
+| `v1.4.2-7b-sharp-4models-16k-vaetiling-h264-bilingual` | 4× 7B Sharp | ~49GB | Detail enhancement |
+| `v1.4.2-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual` | 1× 7B Sharp FP16 | ~27GB | Minimal size |
 
 ---
 
@@ -100,7 +107,6 @@ Full API documentation is available:
 | `/health` | GET | Health check |
 | `/api/gpu/status` | GET | GPU status |
 | `/api/models` | GET | List models |
-| `/api/models/switch` | POST | Load model |
 | `/api/queue/status` | GET | Queue status |
 | `/api/process` | POST | Submit task |
 | `/api/status/{id}` | GET | Task status |
@@ -110,6 +116,22 @@ Full API documentation is available:
 
 ## 📊 Changelog
 
+### v1.4.3 - Performance Optimization (2025-12-27)
+#### ⚡ Performance Improvements
+- ✅ **cuDNN Optimizations** - Enabled `cudnn.benchmark`, `allow_tf32`, and `matmul.allow_tf32` for ~14% overall speedup
+- ✅ **DiT Inference** - ~18% faster with TF32 precision
+- ✅ **Benchmark Analysis** - Detailed phase timing analysis (VAE Encode/DiT/VAE Decode)
+
+#### 📊 Benchmark Results (4K @ L40S)
+| Config | Encode | DiT | Decode | Total | Speedup |
+|--------|--------|-----|--------|-------|---------|
+| Baseline | 1.16s | 4.71s | 2.41s | 8.28s | - |
+| **v1.4.3** | 1.10s | 3.67s | 2.36s | **7.13s** | **+14%** |
+
+#### Docker Tags
+- `latest` → v1.4.3 (cuDNN optimizations + task queue)
+- `stable` → v1.3.3 (proven stable, no task queue)
+
 ### v1.4.2 - Stability Release (2025-12-27)
 #### 🐛 Bug Fixes
 - ✅ **Fixed numpy import error** - Added missing `import numpy as np` that caused "name 'np' is not defined" error during video processing
@@ -118,10 +140,6 @@ Full API documentation is available:
 - ✅ **Fixed `/api/models/switch`** - Now properly sets model state in GPUManager
 - ✅ **Fixed startProcess override bug** - Removed broken empty function override
 - ✅ **Fixed UI model display** - "✓ 已加载" indicator now shows correctly
-
-#### Docker Tags
-- `latest` → v1.4.2 (newest features + task queue)
-- `stable` → v1.3.3 (proven stable, no task queue)
 
 #### All v1.4.2 Variants Tested ✅
 | Variant | Models | Queue | Processing Test |

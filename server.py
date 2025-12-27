@@ -1,5 +1,5 @@
 """
-SeedVR2 Video Upscaler - Web Server v1.4.0
+SeedVR2 Video Upscaler - Web Server v1.4.3
 Task Queue Edition - Serial GPU processing with queue management
 """
 import os
@@ -19,6 +19,12 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
     sys.path.insert(0, script_dir)
 
+# cuDNN optimizations for ~14% performance boost
+import torch
+torch.backends.cudnn.benchmark = True
+torch.backends.cudnn.allow_tf32 = True
+torch.backends.cuda.matmul.allow_tf32 = True
+
 from flask import Flask, request, jsonify, send_file, render_template_string
 from flask_cors import CORS
 from flasgger import Swagger
@@ -35,7 +41,7 @@ CORS(app)
 # Swagger config
 app.config['SWAGGER'] = {
     'title': 'SeedVR2 Video Upscaler API',
-    'version': '1.4.0',
+    'version': '1.4.3',
     'description': 'High-quality video and image upscaling API with Task Queue'
 }
 swagger = Swagger(app)
@@ -569,7 +575,7 @@ def health():
     queue_status = task_queue.get_status()
     return jsonify({
         'status': 'healthy',
-        'version': '1.4.0',
+        'version': '1.4.3',
         'queue_enabled': True,
         'queue_length': queue_status['queue_length'],
         'timestamp': datetime.now().isoformat()
