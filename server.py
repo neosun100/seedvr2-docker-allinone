@@ -9,6 +9,7 @@ import time
 import json
 import threading
 import queue
+import numpy as np
 from pathlib import Path
 from datetime import datetime
 from typing import Optional, Dict, Any, List
