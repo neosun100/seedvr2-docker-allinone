@@ -76,19 +76,27 @@ Then open: **http://localhost:8200**
 
 | Tag | Version | Features | Stability |
 |-----|---------|----------|-----------|
-| `latest` | v1.5.0 | Task Queue + cuDNN Optimizations | ⭐ Recommended |
-| `stable` | v1.3.3 | No Task Queue | 🔒 Proven stable |
+| `latest` | v1.5.0 | Queue + cuDNN (~14% faster) | ⭐ Recommended |
+| `stable` | v1.3.3 | No Queue | 🔒 Proven stable |
 
 ### v1.5.0 Tags (Latest)
 
-| Image Tag | Models | Size | Use Case |
+| Image Tag | Models | Size | Features |
 |-----------|--------|------|----------|
-| `latest` / `v1.5.0` | All 12 | ~103GB | Full features + 14% faster |
-| `v1.5.0-12models-16k-vaetiling-h264-bilingual` | All 12 | ~103GB | Full features |
-| `v1.5.0-3b-fast-4models-16k-vaetiling-h264-bilingual` | 4× 3B | ~26GB | Fast processing |
-| `v1.5.0-7b-quality-4models-16k-vaetiling-h264-bilingual` | 4× 7B | ~49GB | High quality |
-| `v1.5.0-7b-sharp-4models-16k-vaetiling-h264-bilingual` | 4× 7B Sharp | ~49GB | Detail enhancement |
-| `v1.5.0-7b-sharp-fp16-only-16k-vaetiling-h264-bilingual` | 1× 7B Sharp FP16 | ~27GB | Minimal size |
+| `latest` / `v1.5.0` | 12 | 103GB | Queue + cuDNN |
+| `v1.5.0-12models-queue-cudnn-16k-vaetiling-h264-bilingual` | 12 | 103GB | Full features |
+| `v1.5.0-3b-fast-4models-queue-cudnn-16k-vaetiling-h264-bilingual` | 4× 3B | 26GB | Fast processing |
+| `v1.5.0-7b-quality-4models-queue-cudnn-16k-vaetiling-h264-bilingual` | 4× 7B | 49GB | High quality |
+| `v1.5.0-7b-sharp-4models-queue-cudnn-16k-vaetiling-h264-bilingual` | 4× 7B Sharp | 49GB | Best detail |
+| `v1.5.0-7b-sharp-fp16-only-queue-cudnn-16k-vaetiling-h264-bilingual` | 1 | 27GB | Minimal size |
+
+### Tag Naming Convention
+- `queue` - Task queue for multi-user support
+- `cudnn` - cuDNN optimizations (~14% faster)
+- `16k` - Max resolution support
+- `vaetiling` - VAE Tiling for high-res
+- `h264` - H.264 encoding + audio
+- `bilingual` - Chinese/English UI
 
 ---
 
