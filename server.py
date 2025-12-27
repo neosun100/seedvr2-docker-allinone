@@ -1,5 +1,5 @@
 """
-SeedVR2 Video Upscaler - Web Server v1.4.3
+SeedVR2 Video Upscaler - Web Server v1.5.0
 Task Queue Edition - Serial GPU processing with queue management
 """
 import os
@@ -41,7 +41,7 @@ CORS(app)
 # Swagger config
 app.config['SWAGGER'] = {
     'title': 'SeedVR2 Video Upscaler API',
-    'version': '1.4.3',
+    'version': '1.5.0',
     'description': 'High-quality video and image upscaling API with Task Queue'
 }
 swagger = Swagger(app)
@@ -58,7 +58,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 # ============================================================================
-# Task Queue System - v1.4.0
+# Task Queue System - v1.5.0
 # ============================================================================
 
 class TaskQueue:
@@ -575,7 +575,7 @@ def health():
     queue_status = task_queue.get_status()
     return jsonify({
         'status': 'healthy',
-        'version': '1.4.3',
+        'version': '1.5.0',
         'queue_enabled': True,
         'queue_length': queue_status['queue_length'],
         'timestamp': datetime.now().isoformat()
@@ -618,7 +618,7 @@ def list_models():
     })
 
 # ============================================================================
-# Queue API Routes - NEW in v1.4.0
+# Queue API Routes - NEW in v1.5.0
 # ============================================================================
 
 @app.route('/api/queue/status')
@@ -812,7 +812,7 @@ if __name__ == '__main__':
     
     print(f"""
 ╔════════════════════════════════════════════════════════════╗
-║     SeedVR2 Video Upscaler Server v1.4.0 - Queue Edition   ║
+║     SeedVR2 Video Upscaler Server v1.5.0 - Queue Edition   ║
 ╠════════════════════════════════════════════════════════════╣
 ║  🔄 Task Queue: ENABLED (Serial GPU Processing)            ║
 ║  📊 Max History: {MAX_HISTORY_SIZE} tasks                                   ║
