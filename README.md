@@ -128,15 +128,19 @@ Full API documentation is available:
 
 🎉 **Major version bump** - Consolidates all v1.4.x improvements into a stable, optimized release.
 
-#### ⚡ Performance (from v1.4.3)
-- ✅ **cuDNN Optimizations** - `cudnn.benchmark`, `allow_tf32`, `matmul.allow_tf32` for ~14% speedup
-- ✅ **DiT Inference** - ~18% faster with TF32 precision
+#### ⚡ Performance Optimizations
+- ✅ **cuDNN Optimizations** - `cudnn.benchmark=True`, `allow_tf32=True`, `matmul.allow_tf32=True`
+- ✅ **TF32 Precision** - Faster matrix operations on Ampere+ GPUs
 
-#### 📊 Benchmark Results (4K @ L40S)
-| Config | Encode | DiT | Decode | Total | Speedup |
-|--------|--------|-----|--------|-------|---------|
-| Baseline | 1.16s | 4.71s | 2.41s | 8.28s | - |
-| **v1.5.0** | 1.10s | 3.67s | 2.36s | **7.13s** | **+14%** |
+#### 📊 v1.4.2 vs v1.5.0 Benchmark (L40S GPU)
+
+| Test Case | v1.4.2 | v1.5.0 | Note |
+|-----------|--------|--------|------|
+| 512→1080p (3B FP8) | 5s | 5s | Same |
+| 1080→4K (3B FP8) | 9s | 10s | Similar |
+| 1080→4K (7B Sharp) | 24s | 24s | Same |
+
+> **Note**: cuDNN optimizations primarily benefit DiT inference phase. Overall speedup varies by workload. First run may be slower due to cuDNN algorithm search (benchmark mode).
 
 #### 🔄 Task Queue System (from v1.4.0)
 - ✅ Serial GPU processing - no CUDA OOM
