@@ -533,7 +533,7 @@
             <button class="btn btn-danger btn-sm" onclick="offloadModel()" data-i18n="btn_unload">卸载模型</button>
         </div>
 
-        <!-- Queue Status Panel - v1.4.0 -->
+        <!-- Queue Status Panel - v1.5.1 -->
         <div class="queue-status-bar" id="queueStatusBar">
             <div class="queue-stat">
                 <div class="queue-stat-value processing" id="queueProcessing">-</div>
@@ -679,6 +679,13 @@
                         <option value="high" selected data-i18n="vae_quality_high">高质量 (1024/128)</option>
                     </select>
                 </div>
+                <div class="param-group">
+                    <label data-i18n="param_tf32">TF32 加速</label>
+                    <select id="tf32Mode">
+                        <option value="on" selected data-i18n="tf32_on">启用 (推荐)</option>
+                        <option value="off" data-i18n="tf32_off">关闭</option>
+                    </select>
+                </div>
             </div>
             <div style="margin-top: 25px; text-align: center;">
                 <button class="btn btn-primary" id="processBtn" onclick="startProcess()" disabled>
@@ -758,7 +765,7 @@
         const i18n = {
             'zh-CN': {
 
-            // Queue translations - v1.4.0
+            // Queue translations - v1.5.1
             queue_processing: '正在处理',
             queue_waiting: '等待中',
             queue_completed: '已完成',
@@ -794,6 +801,9 @@
                 vae_on: '始终启用',
                 vae_off: '关闭',
                 param_vae_quality: 'VAE 质量',
+                param_tf32: 'TF32 加速',
+                tf32_on: '启用 (推荐)',
+                tf32_off: '关闭',
                 vae_quality_low: '省显存 (512/64)',
                 vae_quality_medium: '平衡 (768/96)',
                 vae_quality_high: '高质量 (1024/128)',
@@ -822,7 +832,7 @@
             },
             'en': {
 
-            // Queue translations - v1.4.0
+            // Queue translations - v1.5.1
             queue_processing: 'Processing',
             queue_waiting: 'Waiting',
             queue_completed: 'Completed',
@@ -858,6 +868,12 @@
                 vae_on: 'Always On',
                 vae_off: 'Off',
                 param_vae_quality: 'VAE Quality',
+                param_tf32: 'TF32 Acceleration',
+                tf32_on: 'Enabled (Recommended)',
+                tf32_off: 'Disabled',
+                param_tf32: 'TF32 加速',
+                tf32_on: '启用 (推荐)',
+                tf32_off: '关闭',
                 vae_quality_low: 'Low VRAM (512/64)',
                 vae_quality_medium: 'Balanced (768/96)',
                 vae_quality_high: 'High Quality (1024/128)',
@@ -886,7 +902,7 @@
             },
             'zh-TW': {
 
-            // Queue translations - v1.4.0
+            // Queue translations - v1.5.1
             queue_processing: '正在處理',
             queue_waiting: '等待中',
             queue_completed: '已完成',
@@ -937,7 +953,7 @@
             },
             'ja': {
 
-            // Queue translations - v1.4.0
+            // Queue translations - v1.5.1
             queue_processing: '処理中',
             queue_waiting: '待機中',
             queue_completed: '完了',
@@ -1281,6 +1297,7 @@
             formData.append('seed', document.getElementById('seed').value);
             formData.append('vae_tiling', document.getElementById('vaeTiling').value);
             formData.append('vae_quality', document.getElementById('vaeQuality').value);
+            formData.append('tf32', document.getElementById('tf32Mode').value);
             
             document.getElementById('processBtn').disabled = true;
             document.getElementById('progressSection').classList.add('active');
@@ -1473,7 +1490,7 @@
         }
 
         
-        // Queue Status Functions - v1.4.0
+        // Queue Status Functions - v1.5.1
         
         async function updateQueueStatus() {
             try {
@@ -1537,12 +1554,6 @@
             }
         }
         
-        // Override startProcess to track task
-        const originalStartProcess = startProcess;
-        startProcess = async function() {
-            // ... original code will be called, we just need to capture task_id
-        };
-
 
         // Initialize
         switchLang(currentLang);
@@ -1561,7 +1572,7 @@
             <div class="footer-brand">
                 <span class="footer-logo">🎬</span>
                 <span class="footer-title">SeedVR2 Docker All-in-One</span>
-                <span class="footer-version">v1.4.0</span>
+                <span class="footer-version">v1.5.1</span>
             </div>
             <div class="footer-links">
                 <a href="https://github.com/neosun100/seedvr2-docker-allinone" target="_blank" class="footer-link">
@@ -1573,7 +1584,7 @@
                     <span data-i18n="footer_issue">🐛 Report Issue</span>
                 </a>
                 <a href="https://hub.docker.com/r/neosun/seedvr2-allinone" target="_blank" class="footer-link">
-                    <svg class="footer-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.186m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288z"/></svg>
+                    <svg class="footer-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.186m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.1.4.285v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.1.4.285v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.1.4.2.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288z"/></svg>
                     <span data-i18n="footer_docker">🐳 Docker Hub</span>
                 </a>
             </div>
@@ -1585,7 +1596,7 @@
 
     <style>
         
-        /* Queue Status Panel - v1.4.0 */
+        /* Queue Status Panel - v1.5.1 */
         .queue-status-bar {
             background: linear-gradient(135deg, #1a3a5c 0%, var(--card) 100%);
             border-radius: 12px;

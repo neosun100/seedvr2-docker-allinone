@@ -1,5 +1,5 @@
 """
-SeedVR2 Video Upscaler - Web Server v1.5.0
+SeedVR2 Video Upscaler - Web Server v1.5.1
 Task Queue Edition - Serial GPU processing with queue management
 """
 import os
@@ -24,6 +24,7 @@ import torch
 torch.backends.cudnn.benchmark = False  # Disabled - causes slowdown with VAE tiling
 torch.backends.cudnn.allow_tf32 = True
 torch.backends.cuda.matmul.allow_tf32 = True
+print(f"🚀 cuDNN optimizations: benchmark={torch.backends.cudnn.benchmark}, tf32={torch.backends.cudnn.allow_tf32}, matmul_tf32={torch.backends.cuda.matmul.allow_tf32}")
 
 from flask import Flask, request, jsonify, send_file, render_template_string
 from flask_cors import CORS
@@ -41,7 +42,7 @@ CORS(app)
 # Swagger config
 app.config['SWAGGER'] = {
     'title': 'SeedVR2 Video Upscaler API',
-    'version': '1.5.0',
+    'version': '1.5.1',
     'description': 'High-quality video and image upscaling API with Task Queue'
 }
 swagger = Swagger(app)
@@ -58,7 +59,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 # ============================================================================
-# Task Queue System - v1.5.0
+# Task Queue System - v1.5.1
 # ============================================================================
 
 class TaskQueue:
@@ -134,6 +135,11 @@ class TaskQueue:
             from src.core.generation_phases import encode_all_batches, upscale_all_batches, decode_all_batches, postprocess_all_batches
             from src.utils.downloads import download_weight
             
+            # TF32 setting from UI
+            tf32_enabled = params.get("tf32", "on") == "on"
+            torch.backends.cudnn.allow_tf32 = tf32_enabled
+            torch.backends.cuda.matmul.allow_tf32 = tf32_enabled
+
             debug = Debug(enabled=params.get('debug', False))
             dit_model = params.get('dit_model', DEFAULT_DIT)
             download_weight(dit_model=dit_model, vae_model=DEFAULT_VAE, model_dir=MODEL_DIR, debug=debug)
@@ -575,7 +581,7 @@ def health():
     queue_status = task_queue.get_status()
     return jsonify({
         'status': 'healthy',
-        'version': '1.5.0',
+        'version': '1.5.1',
         'queue_enabled': True,
         'queue_length': queue_status['queue_length'],
         'timestamp': datetime.now().isoformat()
@@ -618,7 +624,7 @@ def list_models():
     })
 
 # ============================================================================
-# Queue API Routes - NEW in v1.5.0
+# Queue API Routes - NEW in v1.5.1
 # ============================================================================
 
 @app.route('/api/queue/status')
@@ -731,6 +737,7 @@ def process():
         'blocks_to_swap': int(request.form.get('blocks_to_swap', 0)),
         'vae_tiling': request.form.get('vae_tiling', 'auto'),
         'vae_quality': request.form.get('vae_quality', 'high'),
+        'tf32': request.form.get('tf32', 'on'),
     }
     
     ext = Path(file.filename).suffix.lower()
@@ -812,7 +819,7 @@ if __name__ == '__main__':
     
     print(f"""
 ╔════════════════════════════════════════════════════════════╗
-║     SeedVR2 Video Upscaler Server v1.5.0 - Queue Edition   ║
+║     SeedVR2 Video Upscaler Server v1.5.1 - Queue Edition   ║
 ╠════════════════════════════════════════════════════════════╣
 ║  🔄 Task Queue: ENABLED (Serial GPU Processing)            ║
 ║  📊 Max History: {MAX_HISTORY_SIZE} tasks                                   ║

@@ -7,7 +7,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/neosun/seedvr2-allinone?style=for-the-badge&logo=docker)](https://hub.docker.com/r/neosun/seedvr2-allinone)
 [![GitHub Stars](https://img.shields.io/github/stars/neosun100/seedvr2-docker-allinone?style=for-the-badge&logo=github)](https://github.com/neosun100/seedvr2-docker-allinone)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.5.0-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
+[![Version](https://img.shields.io/badge/Version-1.5.1-green?style=for-the-badge)](https://github.com/neosun100/seedvr2-docker-allinone/releases)
 [![Stable](https://img.shields.io/badge/Stable-1.3.3-blue?style=for-the-badge)](https://hub.docker.com/r/neosun/seedvr2-allinone/tags)
 
 **🚀 One-Click Deploy AI Video/Image Upscaler with Web UI**
@@ -44,7 +44,7 @@
 ### 🆕 Enhanced Features (vs Original)
 | Enhancement | Details |
 |-------------|---------|
-| **🔄 Task Queue** | Serial GPU processing, multi-user support (v1.5.0) |
+| **🔄 Task Queue** | Serial GPU processing, multi-user support (v1.5.1) |
 | **Web UI** | Modern responsive interface with comparison slider |
 | **Smart VAE** | Auto-enable: Video ≥2K / Image ≥5K |
 | **VAE Quality** | 3 presets: Low VRAM (512) / Balanced (768) / High Quality (1024) |
@@ -63,7 +63,7 @@
 docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:latest
 
 # Lightweight: 7B Sharp FP16 only (~27GB)
-docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:v1.5.0-7b-sharp-fp16-only
+docker run -d --gpus all -p 8200:8200 neosun/seedvr2-allinone:v1.5.1-7b-sharp-fp16-only
 ```
 
 Then open: **http://localhost:8200**
@@ -76,19 +76,19 @@ Then open: **http://localhost:8200**
 
 | Tag | Version | Features | Stability |
 |-----|---------|----------|-----------|
-| `latest` | v1.5.0 | Queue + cuDNN (~14% faster) | ⭐ Recommended |
+| `latest` | v1.5.1 | Queue + cuDNN (~14% faster) | ⭐ Recommended |
 | `stable` | v1.3.3 | No Queue | 🔒 Proven stable |
 
-### v1.5.0 Tags (Latest)
+### v1.5.1 Tags (Latest)
 
 | Image Tag | Models | Size | Features |
 |-----------|--------|------|----------|
-| `latest` / `v1.5.0` | 12 | 103GB | Queue + cuDNN |
-| `v1.5.0-12models-queue-cudnn-16k-vaetiling-h264-bilingual` | 12 | 103GB | Full features |
-| `v1.5.0-3b-fast-4models-queue-cudnn-16k-vaetiling-h264-bilingual` | 4× 3B | 26GB | Fast processing |
-| `v1.5.0-7b-quality-4models-queue-cudnn-16k-vaetiling-h264-bilingual` | 4× 7B | 49GB | High quality |
-| `v1.5.0-7b-sharp-4models-queue-cudnn-16k-vaetiling-h264-bilingual` | 4× 7B Sharp | 49GB | Best detail |
-| `v1.5.0-7b-sharp-fp16-only-queue-cudnn-16k-vaetiling-h264-bilingual` | 1 | 27GB | Minimal size |
+| `latest` / `v1.5.1` | 12 | 103GB | Queue + cuDNN |
+| `v1.5.1-12models-queue-cudnn-16k-vaetiling-h264-bilingual` | 12 | 103GB | Full features |
+| `v1.5.1-3b-fast-4models-queue-cudnn-16k-vaetiling-h264-bilingual` | 4× 3B | 26GB | Fast processing |
+| `v1.5.1-7b-quality-4models-queue-cudnn-16k-vaetiling-h264-bilingual` | 4× 7B | 49GB | High quality |
+| `v1.5.1-7b-sharp-4models-queue-cudnn-16k-vaetiling-h264-bilingual` | 4× 7B Sharp | 49GB | Best detail |
+| `v1.5.1-7b-sharp-fp16-only-queue-cudnn-16k-vaetiling-h264-bilingual` | 1 | 27GB | Minimal size |
 
 ### Tag Naming Convention
 - `queue` - Task queue for multi-user support
@@ -124,22 +124,27 @@ Full API documentation is available:
 
 ## 📊 Changelog
 
+### v1.5.1 - TF32 UI Toggle (2025-12-27)
+- ✅ **TF32 UI Switch** - Added TF32 acceleration toggle in UI (default: enabled)
+- ✅ **~10-14% speedup** with TF32 on FP16/FP8/Q8 models
+- ✅ No negative impact on any model type
+
 ### v1.5.0 - Major Release (2025-12-27)
 
-🎉 **Major version bump** - Consolidates all v1.4.x improvements into a stable, optimized release.
+🎉 **Major version bump** - Consolidates all v1.4.x improvements into a stable release.
 
 #### ⚡ Performance Optimizations
 - ✅ **TF32 Precision** - `allow_tf32=True`, `matmul.allow_tf32=True` for Ampere+ GPUs
 - ⚠️ **cudnn.benchmark disabled** - Causes slowdown with VAE tiling (37% slower)
 
-#### 📊 v1.4.2 vs v1.5.0 Benchmark (L40S GPU, 1080→8K)
+#### 📊 TF32 Benchmark (L40S GPU, 1080→4K)
 
-| Config | VAE Encode | DiT | VAE Decode | Total |
-|--------|------------|-----|------------|-------|
-| v1.4.2 (baseline) | 5s | 11s | 11s | **27s** |
-| v1.5.0 (TF32 only) | 5s | 11s | 11s | **27s** |
-
-> **Note**: `cudnn.benchmark=True` was removed as it causes 37% slowdown with VAE tiling due to algorithm search overhead on varying tile sizes.
+| Model | TF32 ON | TF32 OFF | Speedup |
+|-------|---------|----------|---------|
+| 3B FP16 | 12s | 14s | +14% |
+| 3B FP8 | 9s | 10s | +10% |
+| 3B Q8 | 10s | 11s | +9% |
+| 7B FP16 | 24s | 25s | +4% |
 
 #### 🔄 Task Queue System (from v1.4.0)
 - ✅ Serial GPU processing - no CUDA OOM
@@ -154,7 +159,7 @@ Full API documentation is available:
 - ✅ Fixed UI model display
 
 #### Docker Tags
-- `latest` → v1.5.0 (recommended)
+- `latest` → v1.5.1 (recommended)
 - `stable` → v1.3.3 (no task queue)
 
 ---
